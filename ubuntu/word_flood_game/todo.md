@@ -1,0 +1,13 @@
+- [x] Opret todo.md
+- [x] Analyser App.tsx
+- [x] Analyser GameBoard.tsx
+- [x] Analyser GameLogic.ts
+- [x] Analyser Leaderboard.tsx
+- [x] Analyser AuthForm.tsx
+- [x] Analyser HowToPlayModal.tsx
+- [x] Implementer permanent synligt og opdelt leaderboard
+- [x] Implementer login efter spillet for at gemme score
+- [x] Implementer bonusbogstav
+- [x] Opdater spilleregler i HowToPlayModal.tsx
+- [x] Test alle nye funktioner
+- [x] Byg og deployer spillet (hvis brugeren ønsker det)
