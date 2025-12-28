@@ -95,18 +95,37 @@ const App: React.FC = () => {
     }
   }, [gameState.isGameOver, gameState.score, celebrateGameOver]);
 
-  // Load saved username and user ID from localStorage
+  // Load saved username and user ID from localStorage, verify user still exists in DB
   useEffect(() => {
-    const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
-    const savedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
+    const loadUser = async () => {
+      const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
+      const savedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
 
-    if (savedUsername && savedUserId) {
-      setUsername(savedUsername);
-      setAnonUserId(savedUserId);
-      // Fetch personal best for this user
-      fetchPersonalBest(savedUserId);
-    }
-    setIsLoadingUser(false);
+      if (savedUsername && savedUserId) {
+        // Verify user still exists in the database
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .eq('id', savedUserId)
+          .single();
+
+        if (error || !profile) {
+          // User no longer exists in DB - clear localStorage
+          console.log('Stored user not found in database, clearing local storage');
+          localStorage.removeItem(STORAGE_KEY_USERNAME);
+          localStorage.removeItem(STORAGE_KEY_USER_ID);
+        } else {
+          // User exists - restore session
+          setUsername(profile.username || savedUsername);
+          setAnonUserId(savedUserId);
+          // Fetch personal best for this user
+          fetchPersonalBest(savedUserId);
+        }
+      }
+      setIsLoadingUser(false);
+    };
+
+    loadUser();
   }, []);
 
   // Fetch personal best score from Supabase
