@@ -5,6 +5,7 @@ import GameBoard from "./components/Game/GameBoard";
 import HowToPlayModal from "./components/Game/HowToPlayModal";
 import WildCardPicker from "./components/Game/WildCardPicker";
 import PowerUpBar from "./components/Game/PowerUpBar";
+import TykkeOverlay from "./components/Game/TykkeOverlay";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
 import StartScreen from "./components/StartScreen";
@@ -29,6 +30,8 @@ import {
   activateShuffle as logicActivateShuffle,
   activateTimeFreeze as logicActivateTimeFreeze,
   clearPendingPowerUp as logicClearPendingPowerUp,
+  activateTykke as logicActivateTykke,
+  completeTykkeHelp as logicCompleteTykkeHelp,
   getDisplayWordString,
   initializeWordList
 } from "./components/Game/GameLogic";
@@ -505,6 +508,45 @@ const AppContent: React.FC = () => {
 
     return () => clearInterval(freezeCheckInterval);
   }, [gameState.isFrozen]);
+
+  // Tykke random helper - triggers once per game when board is getting full
+  // Only in endless mode, when board is 50-80% full, with a small random chance
+  useEffect(() => {
+    if (!gameStarted || gameState.isGameOver || gameState.tykkeUsed || gameState.tykkeActive) {
+      return;
+    }
+
+    // Only trigger in endless mode (not daily challenge)
+    if (gameMode !== 'endless') return;
+
+    // Count filled cells
+    let filledCells = 0;
+    const totalCells = gameState.boardSize.rows * gameState.boardSize.cols;
+    for (let r = 0; r < gameState.boardSize.rows; r++) {
+      for (let c = 0; c < gameState.boardSize.cols; c++) {
+        if (gameState.board[r][c] !== null) {
+          filledCells++;
+        }
+      }
+    }
+
+    const fillPercentage = filledCells / totalCells;
+
+    // Trigger when board is 50-85% full with increasing probability
+    // This gives Tykke a chance to save the player when things get dire
+    if (fillPercentage >= 0.5 && fillPercentage <= 0.85) {
+      // Higher probability as board fills up: 5% at 50%, up to 15% at 85%
+      const baseProbability = 0.05 + (fillPercentage - 0.5) * 0.286;
+      if (Math.random() < baseProbability) {
+        setGameState(prevState => logicActivateTykke(prevState));
+      }
+    }
+  }, [gameStarted, gameState.board, gameState.isGameOver, gameState.tykkeUsed, gameState.tykkeActive, gameMode, gameState.boardSize]);
+
+  // Handle Tykke animation completion
+  const handleTykkeComplete = useCallback(() => {
+    setGameState(prevState => logicCompleteTykkeHelp(prevState));
+  }, []);
 
   // Handle start game
   const handleStartGame = useCallback(async (mode: GameMode) => {
@@ -989,6 +1031,12 @@ const AppContent: React.FC = () => {
         isOpen={isWildCardPickerOpen}
         onSelect={onWildCardSelect}
         onCancel={onWildCardCancel}
+      />
+
+      {/* Tykke Helper Overlay */}
+      <TykkeOverlay
+        isActive={gameState.tykkeActive}
+        onAnimationComplete={handleTykkeComplete}
       />
 
       {/* Username Modal */}

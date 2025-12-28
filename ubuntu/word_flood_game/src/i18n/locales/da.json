@@ -119,5 +119,9 @@
     "words": "Ord: {{count}}",
     "longestWord": "Længste: {{word}}",
     "playNow": "Spil nu på letsword.app"
+  },
+  "tykke": {
+    "title": "Tykke hjælper!",
+    "subtitle": "Brættet ryddes!"
   }
 }

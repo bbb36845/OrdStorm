@@ -134,6 +134,9 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     // Earnable power-ups
     powerUps: { nuke: 0, shuffle: 0, timeFreeze: 0 },
     pendingPowerUp: null,
+    // Tykke helper
+    tykkeUsed: false,
+    tykkeActive: false,
   };
 };
 
@@ -939,5 +942,39 @@ export const initializeGameStateSeeded = (rows: number, cols: number, rng: Seede
     // Earnable power-ups
     powerUps: { nuke: 0, shuffle: 0, timeFreeze: 0 },
     pendingPowerUp: null,
+    // Tykke helper
+    tykkeUsed: false,
+    tykkeActive: false,
+  };
+};
+
+// ============================================
+// TYKKE HELPER FUNCTIONS
+// ============================================
+
+// Activate Tykke - starts the animation
+export const activateTykke = (state: GameState): GameState => {
+  if (state.tykkeUsed || state.isGameOver) return state;
+
+  return {
+    ...state,
+    tykkeUsed: true,
+    tykkeActive: true,
+  };
+};
+
+// Complete Tykke's help - clears the board after animation
+export const completeTykkeHelp = (state: GameState): GameState => {
+  if (!state.tykkeActive) return state;
+
+  // Clear the entire board
+  const newBoard = createInitialBoard(state.boardSize.rows, state.boardSize.cols);
+
+  return {
+    ...state,
+    board: newBoard,
+    currentWord: [], // Clear current selection
+    tykkeActive: false,
+    errorMessage: null,
   };
 };

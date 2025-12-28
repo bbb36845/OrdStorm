@@ -119,5 +119,9 @@
     "words": "Words: {{count}}",
     "longestWord": "Longest: {{word}}",
     "playNow": "Play now at letsword.app"
+  },
+  "tykke": {
+    "title": "Tykke helps!",
+    "subtitle": "Clearing the board!"
   }
 }

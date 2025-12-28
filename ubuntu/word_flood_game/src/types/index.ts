@@ -60,6 +60,10 @@ export interface GameState {
   // Earnable power-ups
   powerUps: PowerUps;
   pendingPowerUp: PowerUpType | null; // Power-up just earned (for animation/notification)
+
+  // Tykke (dog) helper - random event that clears the board once per game
+  tykkeUsed: boolean;
+  tykkeActive: boolean; // Currently showing Tykke animation
 }
 
 export interface User {
