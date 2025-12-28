@@ -7,10 +7,11 @@ import WildCardPicker from "./components/Game/WildCardPicker";
 import PowerUpBar from "./components/Game/PowerUpBar";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
-import LanguageSelector from "./components/LanguageSelector";
+import StartScreen from "./components/StartScreen";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { useConfetti } from "./components/Game/Confetti";
 import { GameState, Letter, PowerUpType } from "./types";
+import { Language } from "./i18n";
 import {
   initializeGameState,
   handleLetterClick as logicHandleLetterClick,
@@ -51,12 +52,15 @@ const STORAGE_KEY_USER_ID = "letsword_user_id";
 // Inner component that uses the language context
 const AppContent: React.FC = () => {
   const { t } = useTranslation();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const [gameState, setGameState] = useState<GameState>(() => initializeGameState(6, 6));
   const [isHowToPlayModalOpen, setIsHowToPlayModalOpen] = useState(false);
   const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
+
+  // Game started state - show start screen first
+  const [gameStarted, setGameStarted] = useState(false);
 
   // Wild card picker state
   const [isWildCardPickerOpen, setIsWildCardPickerOpen] = useState(false);
@@ -393,24 +397,26 @@ const AppContent: React.FC = () => {
   }, [gameState, currentWordString.length, language, t]);
 
   const handleRestartGame = useCallback(() => {
+    // Go back to start screen to allow language change
+    setGameStarted(false);
     setGameState(initializeGameState(6, 6));
     setGameState(prev => ({ ...prev, isWordListLoading: false }));
     setScoreToSave(null);
   }, []);
 
-  // Game loop - add letters
+  // Game loop - add letters (only when game has started)
   useEffect(() => {
-    if (gameState.isGameOver || gameState.isWordListLoading) {
+    if (!gameStarted || gameState.isGameOver || gameState.isWordListLoading) {
       return;
     }
     const addLetterInterval = setInterval(() => {
       setGameState(prevState => {
         if (prevState.isGameOver) return prevState;
-        return logicAddLetterToBoard(prevState);
+        return logicAddLetterToBoard(prevState, language);
       });
     }, 1200); // 1.2 seconds between letters (20% slower)
     return () => clearInterval(addLetterInterval);
-  }, [gameState.isGameOver, gameState.isWordListLoading]);
+  }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, language]);
 
   // Ticking bomb update loop - every 500ms to update bomb timers
   useEffect(() => {
@@ -419,12 +425,12 @@ const AppContent: React.FC = () => {
     const tickingBombInterval = setInterval(() => {
       setGameState(prevState => {
         if (prevState.isGameOver) return prevState;
-        return logicUpdateTickingBombs(prevState);
+        return logicUpdateTickingBombs(prevState, language);
       });
     }, 500);
 
     return () => clearInterval(tickingBombInterval);
-  }, [gameState.isGameOver]);
+  }, [gameState.isGameOver, language]);
 
   // Freeze timer update - check if freeze should end
   useEffect(() => {
@@ -436,6 +442,18 @@ const AppContent: React.FC = () => {
 
     return () => clearInterval(freezeCheckInterval);
   }, [gameState.isFrozen]);
+
+  // Handle start game
+  const handleStartGame = useCallback(() => {
+    setGameStarted(true);
+    setGameState(initializeGameState(6, 6));
+    setGameState(prev => ({ ...prev, isWordListLoading: false }));
+  }, []);
+
+  // Handle language selection from start screen
+  const handleLanguageSelect = useCallback((lang: Language) => {
+    setLanguage(lang);
+  }, [setLanguage]);
 
   // Loading state
   if (isLoadingUser) {
@@ -458,6 +476,21 @@ const AppContent: React.FC = () => {
           <p className="mt-4 text-white/80 text-sm">{t('app.loading')}</p>
         </motion.div>
       </div>
+    );
+  }
+
+  // Show start screen if game hasn't started
+  if (!gameStarted) {
+    return (
+      <>
+        <StartScreen
+          onStart={handleStartGame}
+          onLanguageSelect={handleLanguageSelect}
+          selectedLanguage={language}
+          onShowHowToPlay={() => setIsHowToPlayModalOpen(true)}
+        />
+        <HowToPlayModal isOpen={isHowToPlayModalOpen} onClose={() => setIsHowToPlayModalOpen(false)} />
+      </>
     );
   }
 
@@ -512,7 +545,13 @@ const AppContent: React.FC = () => {
             </div>
           )}
 
-          <LanguageSelector compact />
+          {/* Language indicator */}
+          <div className="flex items-center gap-1.5 px-3 py-2 glass-card rounded-xl">
+            <span className="text-lg">{language === 'da' ? '🇩🇰' : '🇬🇧'}</span>
+            <span className="text-sm text-gray-700 font-medium hidden sm:inline">
+              {language === 'da' ? 'Dansk' : 'English'}
+            </span>
+          </div>
 
           <button
             onClick={() => setIsHowToPlayModalOpen(true)}

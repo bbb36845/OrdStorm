@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from "../../SupabaseClient";
 
 // Danish letter frequency-based weighted selection
-const WEIGHTED_LETTERS = [
+const DANISH_WEIGHTED_LETTERS = [
   // Vowels - high frequency
   'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E',  // ~17% - most common in Danish
   'A', 'A', 'A', 'A', 'A', 'A', 'A',                  // ~8%
@@ -35,6 +35,43 @@ const WEIGHTED_LETTERS = [
   'Z',                                                 // rare
   'Q',                                                 // very rare
 ];
+
+// English letter frequency-based weighted selection (no Æ, Ø, Å)
+const ENGLISH_WEIGHTED_LETTERS = [
+  // Vowels - high frequency
+  'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E',  // ~12% - most common in English
+  'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A',                       // ~8%
+  'I', 'I', 'I', 'I', 'I', 'I', 'I',                            // ~7%
+  'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O',                       // ~8%
+  'U', 'U', 'U',                                                 // ~3%
+  // Consonants
+  'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T', 'T',                  // ~9%
+  'N', 'N', 'N', 'N', 'N', 'N', 'N',                            // ~7%
+  'S', 'S', 'S', 'S', 'S', 'S',                                 // ~6%
+  'R', 'R', 'R', 'R', 'R', 'R',                                 // ~6%
+  'H', 'H', 'H', 'H', 'H', 'H',                                 // ~6%
+  'L', 'L', 'L', 'L',                                           // ~4%
+  'D', 'D', 'D', 'D',                                           // ~4%
+  'C', 'C', 'C',                                                 // ~3%
+  'M', 'M', 'M',                                                 // ~3%
+  'F', 'F', 'F',                                                 // ~2%
+  'W', 'W', 'W',                                                 // ~2%
+  'G', 'G', 'G',                                                 // ~2%
+  'Y', 'Y', 'Y',                                                 // ~2%
+  'P', 'P', 'P',                                                 // ~2%
+  'B', 'B',                                                      // ~1%
+  'V', 'V',                                                      // ~1%
+  'K', 'K',                                                      // ~1%
+  'J',                                                           // rare
+  'X',                                                           // rare
+  'Q',                                                           // rare
+  'Z',                                                           // rare
+];
+
+// Get weighted letters based on language
+export const getWeightedLetters = (language: 'da' | 'en'): string[] => {
+  return language === 'en' ? ENGLISH_WEIGHTED_LETTERS : DANISH_WEIGHTED_LETTERS;
+};
 
 const MIN_WORD_LENGTH = 3;
 
@@ -504,7 +541,7 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
 };
 
 // Handle ticking bomb explosion (fills surrounding cells)
-const handleTickingBombExplosion = (board: Board, bombLetter: Letter, rows: number, cols: number): Board => {
+const handleTickingBombExplosion = (board: Board, bombLetter: Letter, rows: number, cols: number, language: 'da' | 'en' = 'da'): Board => {
   const newBoard = board.map(row => [...row]);
   const directions = [
     [-1, 0], [1, 0], [0, -1], [0, 1],
@@ -512,11 +549,12 @@ const handleTickingBombExplosion = (board: Board, bombLetter: Letter, rows: numb
   ];
 
   // Fill empty adjacent cells with random letters
+  const weightedLetters = getWeightedLetters(language);
   for (const [dr, dc] of directions) {
     const r = bombLetter.row + dr;
     const c = bombLetter.col + dc;
     if (r >= 0 && r < rows && c >= 0 && c < cols && newBoard[r][c] === null) {
-      const randomChar = WEIGHTED_LETTERS[Math.floor(Math.random() * WEIGHTED_LETTERS.length)];
+      const randomChar = weightedLetters[Math.floor(Math.random() * weightedLetters.length)];
       newBoard[r][c] = createLetter(randomChar, r, c, 'locked'); // Explosion creates locked letters!
     }
   }
@@ -525,7 +563,7 @@ const handleTickingBombExplosion = (board: Board, bombLetter: Letter, rows: numb
 };
 
 // Update ticking bombs - called every second
-export const updateTickingBombs = (state: GameState): GameState => {
+export const updateTickingBombs = (state: GameState, language: 'da' | 'en' = 'da'): GameState => {
   const now = Date.now();
   let newBoard = state.board.map(row => [...row]);
   let hasExplosion = false;
@@ -539,7 +577,7 @@ export const updateTickingBombs = (state: GameState): GameState => {
 
         if (remaining <= 0) {
           // Bomb explodes!
-          newBoard = handleTickingBombExplosion(newBoard, letter, state.boardSize.rows, state.boardSize.cols);
+          newBoard = handleTickingBombExplosion(newBoard, letter, state.boardSize.rows, state.boardSize.cols, language);
           // Remove the bomb itself
           newBoard[r][c] = null;
           hasExplosion = true;
@@ -587,7 +625,7 @@ export const updateFreezeStatus = (state: GameState): GameState => {
   return state;
 };
 
-export const addLetterToBoard = (state: GameState): GameState => {
+export const addLetterToBoard = (state: GameState, language: 'da' | 'en' = 'da'): GameState => {
   if (state.isGameOver) return state;
 
   // Don't add letters if frozen
@@ -610,7 +648,8 @@ export const addLetterToBoard = (state: GameState): GameState => {
   const { r, c } = randomEmptyCell;
 
   const newBoard = state.board.map(row => [...row]);
-  const randomChar = WEIGHTED_LETTERS[Math.floor(Math.random() * WEIGHTED_LETTERS.length)];
+  const weightedLetters = getWeightedLetters(language);
+  const randomChar = weightedLetters[Math.floor(Math.random() * weightedLetters.length)];
 
   // Determine letter type
   let letterType: LetterType = 'normal';

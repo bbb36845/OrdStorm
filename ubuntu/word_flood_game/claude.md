@@ -26,8 +26,9 @@ LetsWord is a Danish word puzzle game where players form words from randomly pla
 - **Branch**: main
 
 ### Vercel
-- **Project**: LetsWord
+- **Project**: ord-storm
 - **Domain**: letsword.app
+- **Deployment**: Automatic via GitHub integration - just push to main branch
 
 ## MCP Servers
 

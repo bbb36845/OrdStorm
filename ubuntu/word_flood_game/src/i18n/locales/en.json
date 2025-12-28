@@ -90,5 +90,10 @@
     "select": "Language",
     "da": "Dansk",
     "en": "English"
+  },
+  "startScreen": {
+    "subtitle": "Form words from falling letters before the board fills up!",
+    "selectLanguage": "Select Language",
+    "start": "Start Game"
   }
 }

@@ -90,5 +90,10 @@
     "select": "Sprog",
     "da": "Dansk",
     "en": "English"
+  },
+  "startScreen": {
+    "subtitle": "Dan ord fra faldende bogstaver før brættet fyldes op!",
+    "selectLanguage": "Vælg Sprog",
+    "start": "Start Spil"
   }
 }
