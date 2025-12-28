@@ -30,23 +30,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord
             return (
               <motion.div
                 key={letter ? letter.id : cellKey}
-                layout
-                initial={letter ? { opacity: 0, scale: 0, rotate: -180 } : { opacity: 0.5 }}
+                initial={letter ? { opacity: 0, scale: 0.3 } : { opacity: 0.5 }}
                 animate={letter ? {
                   opacity: 1,
-                  scale: selected ? 1.08 : 1,
-                  rotate: 0,
-                  y: selected ? -4 : 0,
+                  scale: selected ? 1.05 : 1,
+                  y: selected ? -3 : 0,
                 } : { opacity: 1 }}
-                exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                exit={{ opacity: 0, scale: 0.5 }}
                 transition={{
                   type: "spring",
-                  stiffness: 400,
-                  damping: 25,
-                  mass: 0.8,
+                  stiffness: 300,
+                  damping: 20,
                 }}
-                whileHover={letter ? { scale: 1.05, y: -2 } : {}}
-                whileTap={letter ? { scale: 0.95 } : {}}
+                whileHover={letter ? { scale: 1.03 } : {}}
+                whileTap={letter ? { scale: 0.97 } : {}}
                 onClick={() => letter && onLetterClick(letter)}
                 className={`
                   aspect-square rounded-xl flex items-center justify-center

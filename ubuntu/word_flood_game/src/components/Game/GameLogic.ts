@@ -1,7 +1,41 @@
 import { Board, Letter, GameState } from "../../types";
 import { v4 as uuidv4 } from 'uuid';
 
-const DANISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ";
+// Danish letter frequency-based weighted selection
+// Vowels (A, E, I, O, U, Y, Æ, Ø, Å) are more common and weighted higher
+const WEIGHTED_LETTERS = [
+  // Vowels - high frequency
+  'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E',  // ~17% - most common in Danish
+  'A', 'A', 'A', 'A', 'A', 'A', 'A',                  // ~8%
+  'I', 'I', 'I', 'I', 'I', 'I',                       // ~7%
+  'O', 'O', 'O', 'O', 'O',                            // ~5%
+  'N', 'N', 'N', 'N', 'N', 'N', 'N',                  // ~7% - common consonant
+  'R', 'R', 'R', 'R', 'R', 'R', 'R',                  // ~8%
+  'T', 'T', 'T', 'T', 'T', 'T',                       // ~6%
+  'S', 'S', 'S', 'S', 'S', 'S',                       // ~6%
+  'D', 'D', 'D', 'D', 'D',                            // ~5%
+  'L', 'L', 'L', 'L', 'L',                            // ~5%
+  'G', 'G', 'G', 'G',                                  // ~4%
+  'K', 'K', 'K', 'K',                                  // ~4%
+  'M', 'M', 'M', 'M',                                  // ~4%
+  'U', 'U', 'U',                                       // ~2%
+  'B', 'B', 'B',                                       // ~2%
+  'F', 'F', 'F',                                       // ~2%
+  'V', 'V', 'V',                                       // ~2%
+  'H', 'H', 'H',                                       // ~2%
+  'P', 'P',                                            // ~1%
+  'Y', 'Y',                                            // ~1%
+  'Æ', 'Æ',                                            // ~1%
+  'Ø', 'Ø',                                            // ~1%
+  'Å', 'Å',                                            // ~1%
+  'J', 'J',                                            // ~1%
+  'C',                                                 // rare
+  'W',                                                 // rare
+  'X',                                                 // rare
+  'Z',                                                 // rare
+  'Q',                                                 // very rare
+];
+
 const MIN_WORD_LENGTH = 3;
 
 // --- Local Word List Logic ---
@@ -175,7 +209,7 @@ export const addLetterToBoard = (state: GameState): GameState => {
   const { r, c } = randomEmptyCell;
 
   const newBoard = state.board.map(row => [...row]);
-  const randomChar = DANISH_ALPHABET[Math.floor(Math.random() * DANISH_ALPHABET.length)];
+  const randomChar = WEIGHTED_LETTERS[Math.floor(Math.random() * WEIGHTED_LETTERS.length)];
   
   let isNewLetterBonus = false;
   let updatedNormalLettersSinceLastBonus = state.normalLettersSinceLastBonus + 1;
