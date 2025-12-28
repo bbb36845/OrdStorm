@@ -69,6 +69,7 @@ const App: React.FC = () => {
     longestWord: string | null;
   } | null>(null);
   const [_isSavingScore, setIsSavingScore] = useState(false);
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
 
   // Track score changes for confetti
   useEffect(() => {
@@ -238,6 +239,8 @@ const App: React.FC = () => {
       } else {
         // Refresh profile to get updated stats
         fetchProfile(currentUser.id);
+        // Refresh leaderboard to show new score
+        setLeaderboardRefreshKey(prev => prev + 1);
       }
     } catch (err) {
       console.error('Error saving score:', err);
@@ -708,7 +711,7 @@ const App: React.FC = () => {
           transition={{ delay: 0.3 }}
           className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-2/5"
         >
-          <Leaderboard currentUserId={currentUser?.id || null} />
+          <Leaderboard key={leaderboardRefreshKey} currentUserId={currentUser?.id || null} />
         </motion.aside>
       </div>
 
