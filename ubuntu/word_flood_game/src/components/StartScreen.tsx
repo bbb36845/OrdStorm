@@ -78,7 +78,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
               whileTap={{ scale: 0.95 }}
               onClick={() => onLanguageSelect('da')}
               className={`
-                flex flex-col items-center gap-2 px-8 py-5 rounded-2xl transition-all
+                flex flex-col items-center gap-2 px-8 py-5 rounded-2xl transition-all relative
                 ${selectedLanguage === 'da'
                   ? 'bg-white shadow-2xl ring-4 ring-yellow-400/50'
                   : 'bg-white/20 hover:bg-white/30 backdrop-blur-sm'
