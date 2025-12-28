@@ -29,7 +29,8 @@
   "validation": {
     "tooShort": "Word must be at least 3 letters long.",
     "wildcardFirst": "Choose a letter for the wildcard first.",
-    "invalidWord": "\"{{word}}\" is not a valid English word."
+    "invalidWord": "\"{{word}}\" is not a valid English word.",
+    "networkError": "Could not validate. Try again."
   },
   "powerUps": {
     "nuke": "Nuke",

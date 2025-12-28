@@ -261,26 +261,66 @@ const clearAdjacent = (board: Board, centerRow: number, centerCol: number, rows:
   return newBoard;
 };
 
-// Server-side word validation using Supabase RPC
+// Validation result type to distinguish between invalid words and network errors
+export type ValidationResult =
+  | { valid: true }
+  | { valid: false; reason: 'invalid_word' }
+  | { valid: false; reason: 'network_error' };
+
+// Server-side word validation using Supabase RPC with retry logic
 export const validateWord = async (word: string, language: 'da' | 'en' = 'da'): Promise<boolean> => {
-  if (word.length < MIN_WORD_LENGTH) return false;
+  const result = await validateWordWithRetry(word, language);
+  return result.valid;
+};
 
-  try {
-    const { data, error } = await supabase.rpc('validate_word', {
-      word_to_check: word.toLowerCase(),
-      lang: language
-    });
-
-    if (error) {
-      console.error("Error validating word:", error);
-      return false;
-    }
-
-    return data === true;
-  } catch (err) {
-    console.error("Error calling validate_word RPC:", err);
-    return false;
+// Enhanced validation with retry and error distinction
+export const validateWordWithRetry = async (
+  word: string,
+  language: 'da' | 'en' = 'da',
+  maxRetries: number = 2
+): Promise<ValidationResult> => {
+  if (word.length < MIN_WORD_LENGTH) {
+    return { valid: false, reason: 'invalid_word' };
   }
+
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const { data, error } = await supabase.rpc('validate_word', {
+        word_to_check: word.toLowerCase(),
+        lang: language
+      });
+
+      if (error) {
+        console.error(`Error validating word (attempt ${attempt + 1}):`, error);
+        lastError = new Error(error.message);
+        // Wait before retry (exponential backoff)
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)));
+        }
+        continue;
+      }
+
+      // Successful response - return the result
+      if (data === true) {
+        return { valid: true };
+      } else {
+        return { valid: false, reason: 'invalid_word' };
+      }
+    } catch (err) {
+      console.error(`Error calling validate_word RPC (attempt ${attempt + 1}):`, err);
+      lastError = err instanceof Error ? err : new Error('Unknown error');
+      // Wait before retry
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 200 * (attempt + 1)));
+      }
+    }
+  }
+
+  // All retries failed - this is a network error
+  console.error('All validation attempts failed:', lastError);
+  return { valid: false, reason: 'network_error' };
 };
 
 // Backward compatibility alias
@@ -329,6 +369,7 @@ export interface SubmitWordOptions {
     tooShort: string;
     wildcardFirst: string;
     invalidWord: (word: string) => string;
+    networkError: string;
   };
 }
 
@@ -336,6 +377,7 @@ const DEFAULT_ERROR_MESSAGES = {
   tooShort: "Ordet skal være mindst 3 bogstaver langt.",
   wildcardFirst: "Vælg et bogstav for jokeren først.",
   invalidWord: (word: string) => `"${word}" er ikke et gyldigt dansk ord.`,
+  networkError: "Kunne ikke validere ordet. Prøv igen.",
 };
 
 export const submitWord = async (state: GameState, options: SubmitWordOptions = {}): Promise<GameState> => {
@@ -354,11 +396,18 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
   const submittedWordString = getWordString(state.currentWord);
   const displayWordString = getDisplayWordString(state.currentWord);
 
-  // Server-side validation via Supabase RPC
-  const isValidWord = await validateWord(submittedWordString, language);
+  // Server-side validation via Supabase RPC with retry
+  const validationResult = await validateWordWithRetry(submittedWordString, language);
 
-  if (!isValidWord) {
-    // Reset streak on invalid word
+  if (!validationResult.valid) {
+    if (validationResult.reason === 'network_error') {
+      // Network error - don't clear the word, let user try again
+      return {
+        ...state,
+        errorMessage: errorMessages.networkError,
+      };
+    }
+    // Invalid word - reset streak and clear word
     return {
       ...state,
       currentWord: [],

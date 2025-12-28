@@ -29,7 +29,8 @@
   "validation": {
     "tooShort": "Ordet skal være mindst 3 bogstaver langt.",
     "wildcardFirst": "Vælg et bogstav for jokeren først.",
-    "invalidWord": "\"{{word}}\" er ikke et gyldigt dansk ord."
+    "invalidWord": "\"{{word}}\" er ikke et gyldigt dansk ord.",
+    "networkError": "Kunne ikke validere. Prøv igen."
   },
   "powerUps": {
     "nuke": "Nuke",

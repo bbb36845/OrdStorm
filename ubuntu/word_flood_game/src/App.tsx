@@ -382,6 +382,7 @@ const AppContent: React.FC = () => {
           tooShort: t('validation.tooShort'),
           wildcardFirst: t('validation.wildcardFirst'),
           invalidWord: (word: string) => t('validation.invalidWord', { word }),
+          networkError: t('validation.networkError'),
         }
       });
       setGameState({ ...newState, isLoading: false });
