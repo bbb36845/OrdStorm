@@ -39,14 +39,15 @@ const WEIGHTED_LETTERS = [
 const MIN_WORD_LENGTH = 3;
 
 // Special letter spawn rates (percentage chance when spawning a special)
+// Balanced to help players survive longer (Tetris-style gameplay)
 const SPECIAL_LETTER_WEIGHTS: { type: LetterType; weight: number }[] = [
-  { type: 'bonus2x', weight: 35 },      // 35% - 2x multiplier
-  { type: 'bonus3x', weight: 15 },      // 15% - 3x multiplier
-  { type: 'bomb', weight: 15 },         // 15% - Clears 3x3 area
-  { type: 'wild', weight: 10 },         // 10% - Wildcard letter
-  { type: 'ice', weight: 10 },          // 10% - Freezes timer
-  { type: 'chain', weight: 8 },         // 8% - Chain clear
-  { type: 'tickingBomb', weight: 7 },   // 7% - Ticking bomb (risk/reward)
+  { type: 'bomb', weight: 28 },         // 28% - Clears 3x3 area (most helpful!)
+  { type: 'bonus2x', weight: 22 },      // 22% - 2x multiplier
+  { type: 'chain', weight: 15 },        // 15% - Chain clear (helpful)
+  { type: 'ice', weight: 12 },          // 12% - Freezes timer (breathing room)
+  { type: 'bonus3x', weight: 10 },      // 10% - 3x multiplier
+  { type: 'wild', weight: 8 },          // 8% - Wildcard letter
+  { type: 'tickingBomb', weight: 5 },   // 5% - Ticking bomb (risk/reward, reduced)
 ];
 
 // Ticking bomb settings
@@ -92,7 +93,7 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     wordStreak: 0,
     lastWordTime: null,
     lettersSinceSpecial: 0,
-    nextSpecialIn: 15 + Math.floor(Math.random() * 20), // Special every 15-35 letters
+    nextSpecialIn: 8 + Math.floor(Math.random() * 11), // Special every 8-18 letters (more frequent for longer games)
   };
 };
 
@@ -522,7 +523,7 @@ export const addLetterToBoard = (state: GameState): GameState => {
   else if (updatedLettersSinceSpecial >= state.nextSpecialIn) {
     letterType = selectRandomSpecialType();
     updatedLettersSinceSpecial = 0;
-    updatedNextSpecialIn = 15 + Math.floor(Math.random() * 20);
+    updatedNextSpecialIn = 8 + Math.floor(Math.random() * 11); // 8-18 letters until next special
     // Reset bonus counter if we spawned a bonus-type special
     if (letterType === 'bonus2x' || letterType === 'bonus3x') {
       updatedNormalLettersSinceLastBonus = 0;
