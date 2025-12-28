@@ -17,21 +17,21 @@ const TykkeOverlay: React.FC<TykkeOverlayProps> = ({ isActive, onAnimationComple
       return;
     }
 
-    // Phase 1: Drop animation (1 second)
+    // Phase 1: Drop animation (1.5 seconds)
     const dropTimer = setTimeout(() => {
       setPhase('showing');
-    }, 1000);
+    }, 1500);
 
-    // Phase 2: Show "Tykke hjælper!" text (1.5 seconds)
+    // Phase 2: Show "Tykke hjælper!" text (3 seconds)
     const showTimer = setTimeout(() => {
       setPhase('clearing');
-    }, 2500);
+    }, 4500);
 
-    // Phase 3: Clear effect and complete (0.5 seconds)
+    // Phase 3: Clear effect and complete (1 second)
     const clearTimer = setTimeout(() => {
       setPhase('done');
       onAnimationComplete();
-    }, 3000);
+    }, 5500);
 
     return () => {
       clearTimeout(dropTimer);
@@ -62,9 +62,9 @@ const TykkeOverlay: React.FC<TykkeOverlayProps> = ({ isActive, onAnimationComple
             }
             transition={
               phase === 'dropping'
-                ? { type: 'spring', damping: 12, stiffness: 100, duration: 1 }
+                ? { type: 'spring', damping: 10, stiffness: 80, duration: 1.5 }
                 : phase === 'clearing'
-                ? { duration: 0.5 }
+                ? { duration: 0.8 }
                 : {}
             }
             className="relative"
@@ -123,7 +123,7 @@ const TykkeOverlay: React.FC<TykkeOverlayProps> = ({ isActive, onAnimationComple
             <motion.div
               initial={{ scale: 0, opacity: 0.8 }}
               animate={{ scale: 4, opacity: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.8 }}
               className="absolute w-64 h-64 rounded-full bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400"
             />
           )}
