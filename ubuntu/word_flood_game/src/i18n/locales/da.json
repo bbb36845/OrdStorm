@@ -94,27 +94,12 @@
   "startScreen": {
     "subtitle": "Dan ord fra faldende bogstaver før brættet fyldes op!",
     "selectLanguage": "Vælg Sprog",
-    "start": "Start Spil",
-    "dailyChallenge": "Dagens Udfordring",
-    "endless": "Uendelig"
-  },
-  "daily": {
-    "title": "Dagens Udfordring",
-    "subtitle": "Samme puslespil for alle i dag!",
-    "alreadyCompleted": "Du har allerede gennemført dagens udfordring",
-    "yourResult": "Dit resultat",
-    "rank": "Placering #{{rank}}",
-    "comeBackTomorrow": "Kom tilbage i morgen for en ny udfordring!",
-    "leaderboard": "Dagens Rangliste",
-    "loading": "Indlæser udfordring...",
-    "error": "Kunne ikke indlæse dagens udfordring"
+    "start": "Start Spil"
   },
   "share": {
     "button": "Del Resultat",
     "copied": "Kopieret til udklipsholder!",
     "title": "LetsWord",
-    "dailyResult": "Dagens Udfordring {{date}}",
-    "endlessResult": "Uendelig Mode",
     "score": "Score: {{score}}",
     "words": "Ord: {{count}}",
     "longestWord": "Længste: {{word}}",

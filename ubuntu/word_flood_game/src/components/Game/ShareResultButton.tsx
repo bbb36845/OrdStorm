@@ -13,59 +13,6 @@ const ShareResultButton: React.FC<ShareResultButtonProps> = ({ result, className
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
-  // Generate share URL with OG image parameters
-  const generateShareUrl = (): string => {
-    const params = new URLSearchParams({
-      score: result.score.toString(),
-      words: result.wordCount.toString(),
-      mode: result.gameMode,
-      lang: result.language,
-    });
-
-    if (result.longestWord) {
-      params.set('longest', result.longestWord);
-    }
-
-    if (result.gameMode === 'daily' && result.rank) {
-      params.set('rank', result.rank.toString());
-    }
-
-    return `https://letsword.app/api/share?${params.toString()}`;
-  };
-
-  const generateShareText = (): string => {
-    const lines: string[] = [];
-
-    // Title and mode
-    lines.push(`${t('share.title')} ${result.language === 'da' ? '🇩🇰' : '🇬🇧'}`);
-
-    if (result.gameMode === 'daily') {
-      lines.push(t('share.dailyResult', { date: result.date }));
-    } else {
-      lines.push(t('share.endlessResult'));
-    }
-
-    lines.push('');
-
-    // Stats with emojis
-    lines.push(`${getScoreEmoji(result.score)} ${t('share.score', { score: result.score })}`);
-    lines.push(`${getWordsEmoji(result.wordCount)} ${t('share.words', { count: result.wordCount })}`);
-
-    if (result.longestWord) {
-      lines.push(`${getLongestWordEmoji(result.longestWord.length)} ${t('share.longestWord', { word: result.longestWord })}`);
-    }
-
-    // Rank for daily challenge
-    if (result.gameMode === 'daily' && result.rank) {
-      lines.push(`${getRankEmoji(result.rank)} ${t('daily.rank', { rank: result.rank })}`);
-    }
-
-    lines.push('');
-    lines.push(generateShareUrl());
-
-    return lines.join('\n');
-  };
-
   const getScoreEmoji = (score: number): string => {
     if (score >= 500) return '🏆';
     if (score >= 300) return '🌟';
@@ -86,17 +33,29 @@ const ShareResultButton: React.FC<ShareResultButtonProps> = ({ result, className
     return '💡';
   };
 
-  const getRankEmoji = (rank: number): string => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    if (rank <= 10) return '🏅';
-    return '📍';
+  const generateShareText = (): string => {
+    const lines: string[] = [];
+
+    // Title with flag
+    lines.push(`${t('share.title')} ${result.language === 'da' ? '🇩🇰' : '🇬🇧'}`);
+    lines.push('');
+
+    // Stats with emojis
+    lines.push(`${getScoreEmoji(result.score)} ${t('share.score', { score: result.score })}`);
+    lines.push(`${getWordsEmoji(result.wordCount)} ${t('share.words', { count: result.wordCount })}`);
+
+    if (result.longestWord) {
+      lines.push(`${getLongestWordEmoji(result.longestWord.length)} ${t('share.longestWord', { word: result.longestWord })}`);
+    }
+
+    lines.push('');
+    lines.push(`🎮 ${t('share.playNow')}`);
+
+    return lines.join('\n');
   };
 
   const handleShare = async () => {
     const shareText = generateShareText();
-    const shareUrl = generateShareUrl();
 
     // Try native share API first (mobile)
     if (navigator.share) {
@@ -104,7 +63,6 @@ const ShareResultButton: React.FC<ShareResultButtonProps> = ({ result, className
         await navigator.share({
           title: t('share.title'),
           text: shareText,
-          url: shareUrl,
         });
         return;
       } catch (err) {

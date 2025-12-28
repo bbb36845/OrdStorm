@@ -109,33 +109,6 @@ export interface ScoreEntry {
   };
 }
 
-// Game mode type
-export type GameMode = 'endless' | 'daily';
-
-// Daily challenge types
-export interface DailyChallenge {
-  challenge_date: string;
-  seed: string;
-  language: 'da' | 'en';
-}
-
-export interface DailyChallengeAttempt {
-  id: string;
-  user_id: string;
-  challenge_date: string;
-  language: 'da' | 'en';
-  score: number;
-  words_found: string[];
-  word_count: number;
-  longest_word: string | null;
-  completed_at: string;
-  // Joined from profiles
-  profiles?: {
-    username: string | null;
-    display_name: string | null;
-  };
-}
-
 // Share result types
 export interface ShareableResult {
   score: number;
@@ -143,7 +116,5 @@ export interface ShareableResult {
   longestWord: string | null;
   date: string;
   language: 'da' | 'en';
-  gameMode: GameMode;
-  rank?: number;
 }
 
