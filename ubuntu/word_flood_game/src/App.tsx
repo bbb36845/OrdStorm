@@ -45,6 +45,7 @@ import {
   Snowflake
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 
 const STORAGE_KEY_USERNAME = "letsword_username";
 const STORAGE_KEY_USER_ID = "letsword_user_id";
@@ -520,15 +521,15 @@ const AppContent: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-1.5 sm:gap-2"
+          className="flex items-center gap-1 sm:gap-2"
         >
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 4, repeat: Infinity }}
           >
-            <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 drop-shadow-lg" />
+            <Zap className="w-5 h-5 sm:w-8 sm:h-8 text-yellow-300 drop-shadow-lg" />
           </motion.div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
+          <h1 className="text-xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
             {t('app.title')}
           </h1>
         </motion.div>
@@ -536,12 +537,12 @@ const AppContent: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-1.5 sm:gap-3"
+          className="flex items-center gap-1 sm:gap-3"
         >
           {username && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-2 glass-card rounded-xl">
-              <User size={16} className="text-indigo-600" />
-              <span className="text-sm text-gray-700 font-medium">{username}</span>
+            <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 glass-card rounded-xl">
+              <User size={14} className="text-indigo-600 sm:w-4 sm:h-4" />
+              <span className="text-xs sm:text-sm text-gray-700 font-medium max-w-[60px] sm:max-w-none truncate">{username}</span>
             </div>
           )}
 
@@ -938,6 +939,7 @@ const App: React.FC = () => {
   return (
     <LanguageProvider>
       <AppContent />
+      <Analytics />
     </LanguageProvider>
   );
 };
