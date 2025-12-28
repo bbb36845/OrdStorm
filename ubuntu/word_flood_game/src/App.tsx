@@ -8,11 +8,12 @@ import PowerUpBar from "./components/Game/PowerUpBar";
 import TykkeOverlay from "./components/Game/TykkeOverlay";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
+import RecordsLeaderboard from "./components/Game/RecordsLeaderboard";
 import StartScreen from "./components/StartScreen";
 import ShareResultButton from "./components/Game/ShareResultButton";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { useConfetti } from "./components/Game/Confetti";
-import { GameState, Letter, PowerUpType, ShareableResult } from "./types";
+import { GameState, Letter, PowerUpType, ShareableResult, GameRecords } from "./types";
 import { Language } from "./i18n";
 import {
   initializeGameState,
@@ -88,6 +89,7 @@ const AppContent: React.FC = () => {
     score: number;
     wordsFound: string[];
     longestWord: string | null;
+    records?: GameRecords;
   } | null>(null);
   const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
 
@@ -178,10 +180,22 @@ const AppContent: React.FC = () => {
     if (gameState.isGameOver && gameState.score > 0) {
       const longestWord = gameState.foundWords.reduce((a, b) => a.length >= b.length ? a : b, '');
 
+      // Create game records object
+      const gameRecords: GameRecords = {
+        fastestWordMs: gameState.fastestWordMs,
+        fastestWord: gameState.fastestWord,
+        longestWord: longestWord || null,
+        highestWordScore: gameState.highestWordScore,
+        highestScoringWord: gameState.highestScoringWord,
+        maxStreak: gameState.maxStreak,
+        totalWords: gameState.foundWords.length,
+        totalScore: gameState.score
+      };
+
       // Save score
       if (username && anonUserId) {
         // User has username - save to Supabase automatically
-        saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord, language);
+        saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord, language, gameRecords);
         // Update personal best locally only when score is actually saved
         if (gameState.score > personalBest) {
           setPersonalBest(gameState.score);
@@ -191,7 +205,8 @@ const AppContent: React.FC = () => {
         setScoreToSave({
           score: gameState.score,
           wordsFound: gameState.foundWords,
-          longestWord: longestWord || null
+          longestWord: longestWord || null,
+          records: gameRecords
         });
       }
     }
@@ -203,7 +218,8 @@ const AppContent: React.FC = () => {
     score: number,
     wordsFound: string[],
     longestWord: string | null,
-    lang: 'da' | 'en' = 'da'
+    lang: 'da' | 'en' = 'da',
+    records?: GameRecords
   ) => {
     try {
       const { error } = await supabase
@@ -224,9 +240,99 @@ const AppContent: React.FC = () => {
       } else {
         // Refresh leaderboard to show new score
         setLeaderboardRefreshKey(prev => prev + 1);
+
+        // Save records if provided
+        if (records) {
+          await saveRecordsToSupabase(userId, records, lang);
+        }
       }
     } catch (err) {
       console.error('Error saving score:', err);
+    }
+  };
+
+  // Save records to Supabase using the upsert_record function
+  const saveRecordsToSupabase = async (
+    userId: string,
+    records: GameRecords,
+    lang: 'da' | 'en'
+  ) => {
+    try {
+      // Save fastest word record
+      if (records.fastestWordMs !== null && records.fastestWord) {
+        await supabase.rpc('upsert_record', {
+          p_user_id: userId,
+          p_category: 'fastest_word',
+          p_value: records.fastestWordMs,
+          p_word: records.fastestWord,
+          p_language: lang
+        });
+      }
+
+      // Save longest word record
+      if (records.longestWord) {
+        await supabase.rpc('upsert_record', {
+          p_user_id: userId,
+          p_category: 'longest_word',
+          p_value: records.longestWord.length,
+          p_word: records.longestWord,
+          p_language: lang
+        });
+      }
+
+      // Save highest word score record
+      if (records.highestWordScore > 0 && records.highestScoringWord) {
+        await supabase.rpc('upsert_record', {
+          p_user_id: userId,
+          p_category: 'highest_word_score',
+          p_value: records.highestWordScore,
+          p_word: records.highestScoringWord,
+          p_language: lang
+        });
+      }
+
+      // Save longest streak record
+      if (records.maxStreak > 0) {
+        await supabase.rpc('upsert_record', {
+          p_user_id: userId,
+          p_category: 'longest_streak',
+          p_value: records.maxStreak,
+          p_word: null,
+          p_language: lang
+        });
+      }
+
+      // Save most words in a game record
+      if (records.totalWords > 0) {
+        await supabase.rpc('upsert_record', {
+          p_user_id: userId,
+          p_category: 'most_words_game',
+          p_value: records.totalWords,
+          p_word: null,
+          p_language: lang
+        });
+      }
+
+      // Update total score (lifetime) - this accumulates
+      const { data: existingRecord } = await supabase
+        .from('records')
+        .select('value')
+        .eq('user_id', userId)
+        .eq('category', 'total_score')
+        .eq('language', lang)
+        .single();
+
+      const newTotalScore = (existingRecord?.value || 0) + records.totalScore;
+      await supabase.rpc('upsert_record', {
+        p_user_id: userId,
+        p_category: 'total_score',
+        p_value: newTotalScore,
+        p_word: null,
+        p_language: lang
+      });
+
+    } catch (err) {
+      console.error('Error saving records:', err);
     }
   };
 
@@ -285,7 +391,7 @@ const AppContent: React.FC = () => {
 
       // Save the pending score if there is one
       if (scoreToSave) {
-        await saveScoreToSupabase(userId, scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord, language);
+        await saveScoreToSupabase(userId, scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord, language, scoreToSave.records);
         // Update personal best to the saved score (this is the user's first saved score)
         setPersonalBest(scoreToSave.score);
         setScoreToSave(null);
@@ -893,9 +999,19 @@ const AppContent: React.FC = () => {
           )}
         </main>
 
-        {/* Leaderboard */}
-        <aside className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-2/5">
-          <Leaderboard key={`${leaderboardRefreshKey}-${language}`} currentUserId={anonUserId} language={language} />
+        {/* Leaderboards */}
+        <aside className="flex flex-col gap-4 w-full lg:w-2/5">
+          <div className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl">
+            <Leaderboard key={`${leaderboardRefreshKey}-${language}`} currentUserId={anonUserId} language={language} />
+          </div>
+          <div className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl">
+            <RecordsLeaderboard
+              key={`records-${leaderboardRefreshKey}-${language}`}
+              currentUserId={anonUserId}
+              language={language}
+              refreshKey={leaderboardRefreshKey}
+            />
+          </div>
         </aside>
       </div>
 

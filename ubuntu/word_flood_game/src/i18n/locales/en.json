@@ -3,7 +3,7 @@
     "title": "LetsWord",
     "subtitle": "Word Game",
     "loading": "Loading game...",
-    "footer": "© 2025 Jensen"
+    "footer": "© 2025 Tykke"
   },
   "game": {
     "currentWord": "Current word",
@@ -68,7 +68,25 @@
     "loading": "Loading...",
     "empty": "No scores yet",
     "points": "points",
-    "words": "words"
+    "words": "words",
+    "you": "You",
+    "beFirst": "Be the first!",
+    "couldNotLoad": "Could not load",
+    "tryAgain": "Try again",
+    "refresh": "Refresh"
+  },
+  "records": {
+    "title": "Records",
+    "letters": "letters",
+    "words": "words",
+    "categories": {
+      "fastest_word": "Fastest Word",
+      "longest_word": "Longest Word",
+      "highest_word_score": "Best Word Score",
+      "longest_streak": "Best Streak",
+      "most_words_game": "Most Words",
+      "total_score": "Total Score"
+    }
   },
   "auth": {
     "saveYourScore": "Save your score",

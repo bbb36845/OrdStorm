@@ -3,7 +3,7 @@
     "title": "LetsWord",
     "subtitle": "Dansk Ordspil",
     "loading": "Indlæser spil...",
-    "footer": "© 2025 Jensen"
+    "footer": "© 2025 Tykke"
   },
   "game": {
     "currentWord": "Nuværende ord",
@@ -68,7 +68,25 @@
     "loading": "Indlæser...",
     "empty": "Ingen scores endnu",
     "points": "point",
-    "words": "ord"
+    "words": "ord",
+    "you": "Dig",
+    "beFirst": "Vær den første!",
+    "couldNotLoad": "Kunne ikke indlæse",
+    "tryAgain": "Prøv igen",
+    "refresh": "Opdater"
+  },
+  "records": {
+    "title": "Rekorder",
+    "letters": "bogstaver",
+    "words": "ord",
+    "categories": {
+      "fastest_word": "Hurtigste Ord",
+      "longest_word": "Længste Ord",
+      "highest_word_score": "Bedste Ordscore",
+      "longest_streak": "Bedste Streak",
+      "most_words_game": "Flest Ord",
+      "total_score": "Total Score"
+    }
   },
   "auth": {
     "saveYourScore": "Gem din score",

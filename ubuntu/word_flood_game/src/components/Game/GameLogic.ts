@@ -137,6 +137,13 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     // Tykke helper
     tykkeUsed: false,
     tykkeActive: false,
+    // Record tracking
+    wordStartTime: null,
+    fastestWordMs: null,
+    fastestWord: null,
+    highestWordScore: 0,
+    highestScoringWord: null,
+    maxStreak: 0,
   };
 };
 
@@ -175,12 +182,26 @@ const createLetter = (char: string, row: number, col: number, letterType: Letter
 };
 
 export const handleLetterClick = (state: GameState, clickedLetter: Letter): GameState => {
-  if (state.currentWord.find(l => l.id === clickedLetter.id)) {
-    return state;
+  const existingIndex = state.currentWord.findIndex(l => l.id === clickedLetter.id);
+
+  // If letter is already selected, remove it and all letters after it
+  if (existingIndex !== -1) {
+    // If removing the first letter, reset the timer
+    const newCurrentWord = state.currentWord.slice(0, existingIndex);
+    return {
+      ...state,
+      currentWord: newCurrentWord,
+      wordStartTime: newCurrentWord.length === 0 ? null : state.wordStartTime,
+    };
   }
+
+  // Otherwise, add the letter to the current word
+  // Start timing when first letter is clicked
+  const isFirstLetter = state.currentWord.length === 0;
   return {
     ...state,
     currentWord: [...state.currentWord, clickedLetter],
+    wordStartTime: isFirstLetter ? Date.now() : state.wordStartTime,
   };
 };
 
@@ -188,6 +209,7 @@ export const clearCurrentWord = (state: GameState): GameState => {
   return {
     ...state,
     currentWord: [],
+    wordStartTime: null,
   };
 };
 
@@ -540,10 +562,33 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
     if (!pendingPowerUp) pendingPowerUp = 'timeFreeze';
   }
 
+  // Calculate word timing for fastest word record
+  const wordTimeMs = state.wordStartTime ? now - state.wordStartTime : null;
+  const wordString = displayWordString.toUpperCase();
+
+  // Update fastest word record
+  let newFastestWordMs = state.fastestWordMs;
+  let newFastestWord = state.fastestWord;
+  if (wordTimeMs !== null && (state.fastestWordMs === null || wordTimeMs < state.fastestWordMs)) {
+    newFastestWordMs = wordTimeMs;
+    newFastestWord = wordString;
+  }
+
+  // Update highest word score record
+  let newHighestWordScore = state.highestWordScore;
+  let newHighestScoringWord = state.highestScoringWord;
+  if (wordScore > state.highestWordScore) {
+    newHighestWordScore = wordScore;
+    newHighestScoringWord = wordString;
+  }
+
+  // Update max streak record
+  const newMaxStreak = Math.max(state.maxStreak, newStreak);
+
   return {
     ...state,
     board: newBoard,
-    foundWords: [...state.foundWords, displayWordString.toUpperCase()],
+    foundWords: [...state.foundWords, wordString],
     currentWord: [],
     score: state.score + wordScore,
     errorMessage: null,
@@ -553,6 +598,13 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
     freezeEndTime: shouldFreeze ? Date.now() + 5000 : state.freezeEndTime, // 5 second freeze
     powerUps: earnedPowerUps,
     pendingPowerUp,
+    // Record tracking
+    wordStartTime: null,
+    fastestWordMs: newFastestWordMs,
+    fastestWord: newFastestWord,
+    highestWordScore: newHighestWordScore,
+    highestScoringWord: newHighestScoringWord,
+    maxStreak: newMaxStreak,
   };
 };
 

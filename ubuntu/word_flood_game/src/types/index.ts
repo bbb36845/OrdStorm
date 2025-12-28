@@ -64,6 +64,14 @@ export interface GameState {
   // Tykke (dog) helper - random event that clears the board once per game
   tykkeUsed: boolean;
   tykkeActive: boolean; // Currently showing Tykke animation
+
+  // Record tracking for leaderboards
+  wordStartTime: number | null; // Timestamp when first letter was clicked
+  fastestWordMs: number | null; // Fastest word typed this game (milliseconds)
+  fastestWord: string | null; // The fastest word typed
+  highestWordScore: number; // Highest scoring single word this game
+  highestScoringWord: string | null; // The word with highest score
+  maxStreak: number; // Maximum streak achieved this game
 }
 
 export interface User {
@@ -116,5 +124,42 @@ export interface ShareableResult {
   longestWord: string | null;
   date: string;
   language: 'da' | 'en';
+}
+
+// Record categories for leaderboards
+export type RecordCategory =
+  | 'fastest_word'       // Fastest word typed (milliseconds)
+  | 'longest_word'       // Longest word found
+  | 'highest_word_score' // Highest scoring single word
+  | 'longest_streak'     // Longest streak in a single game
+  | 'most_words_game'    // Most words found in a single game
+  | 'total_score';       // Lifetime total score
+
+export interface RecordEntry {
+  id: string;
+  user_id: string;
+  category: RecordCategory;
+  value: number;
+  word: string | null;
+  language: 'da' | 'en';
+  created_at: string;
+  updated_at: string;
+  // Joined from profiles
+  profiles?: {
+    username: string | null;
+    display_name: string | null;
+  };
+}
+
+// Game records to be saved after a game
+export interface GameRecords {
+  fastestWordMs: number | null;
+  fastestWord: string | null;
+  longestWord: string | null;
+  highestWordScore: number;
+  highestScoringWord: string | null;
+  maxStreak: number;
+  totalWords: number;
+  totalScore: number;
 }
 
