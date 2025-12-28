@@ -1,10 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
-    --radius: 0.5rem
-  ;
+    --radius: 0.5rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -12,7 +12,8 @@
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%}
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
   .dark {
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -21,20 +22,263 @@
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
+/* ============================================
+   ORDSTORM PREMIUM UI STYLES
+   ============================================ */
+
+/* Static gradient background (performance optimized) */
+.animated-gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #6B8DD6 100%);
+}
+
+/* Bonus letter glow effect */
 @keyframes bonusShine {
   0%, 100% {
-    box-shadow: 0 0 8px 3px rgba(250, 204, 21, 0.7); /* yellow-400 med alpha */
+    box-shadow: 0 0 10px 4px rgba(251, 191, 36, 0.6),
+                0 0 20px 8px rgba(251, 191, 36, 0.3),
+                inset 0 0 10px rgba(255, 255, 255, 0.3);
   }
   50% {
-    box-shadow: 0 0 16px 6px rgba(245, 158, 11, 0.8); /* yellow-500 med alpha */
+    box-shadow: 0 0 20px 8px rgba(245, 158, 11, 0.8),
+                0 0 40px 16px rgba(245, 158, 11, 0.4),
+                inset 0 0 15px rgba(255, 255, 255, 0.5);
   }
 }
 
 .bonus-shine {
-  animation: bonusShine 2s infinite ease-in-out;
+  animation: bonusShine 1.5s infinite ease-in-out;
+}
+
+/* Letter tile pop-in animation */
+@keyframes letterPopIn {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  80% {
+    transform: scale(0.95) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.letter-pop-in {
+  animation: letterPopIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Selected letter pulse */
+@keyframes selectedPulse {
+  0%, 100% {
+    transform: scale(1.05);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.selected-pulse {
+  animation: selectedPulse 0.6s ease-in-out infinite;
+}
+
+/* Score counter animation */
+@keyframes scorePopup {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.score-pop {
+  animation: scorePopup 0.3s ease-out;
+}
+
+/* Word submission flash */
+@keyframes wordFlash {
+  0% {
+    background-color: rgba(34, 197, 94, 0.8);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.word-flash {
+  animation: wordFlash 0.5s ease-out;
+}
+
+/* Floating particles effect for background */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  66% {
+    transform: translateY(5px) rotate(-3deg);
+  }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Glass morphism effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Premium letter tile styles */
+.letter-tile {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.letter-tile:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.15),
+    0 4px 6px -2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.letter-tile-selected {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.5),
+    0 10px 20px -5px rgba(245, 158, 11, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.letter-tile-bonus {
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 50%, #d97706 100%);
+  box-shadow:
+    0 0 20px 5px rgba(251, 191, 36, 0.5),
+    0 0 40px 10px rgba(245, 158, 11, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+
+/* Empty cell style */
+.empty-cell {
+  background: linear-gradient(135deg, rgba(186, 230, 253, 0.4) 0%, rgba(147, 197, 253, 0.3) 100%);
+  border: 2px dashed rgba(56, 189, 248, 0.3);
+}
+
+/* Game board container */
+.game-board {
+  background: linear-gradient(145deg, rgba(224, 242, 254, 0.9) 0%, rgba(186, 230, 253, 0.9) 100%);
+  box-shadow:
+    inset 0 2px 10px rgba(0, 0, 0, 0.05),
+    0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* Trophy animation for game over */
+@keyframes trophyBounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-4px) rotate(5deg);
+  }
+}
+
+.trophy-bounce {
+  animation: trophyBounce 2s ease-in-out infinite;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Leaderboard rank badges */
+.rank-gold {
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 50%, #d97706 100%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+.rank-silver {
+  background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 50%, #6b7280 100%);
+  box-shadow: 0 0 10px rgba(156, 163, 175, 0.5);
+}
+
+.rank-bronze {
+  background: linear-gradient(135deg, #fed7aa 0%, #fb923c 50%, #c2410c 100%);
+  box-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
+}
+
+/* Button hover effects */
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.btn-premium:hover::before {
+  left: 100%;
+}
+
+/* Text gradient effect */
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 

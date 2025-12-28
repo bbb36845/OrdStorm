@@ -22,13 +22,45 @@ export interface GameState {
 }
 
 export interface User {
+  id: string;
   username: string;
+  email?: string;
+}
+
+export interface Profile {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  games_played: number;
+  total_score: number;
+  highest_score: number;
+  longest_word: string | null;
+  current_streak: number;
+  longest_streak: number;
+  last_played_at: string | null;
+  xp: number;
+  level: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ScoreEntry {
-  username: string; // Altid til stede fra vores select
+  id: string;
+  user_id: string;
   score: number;
-  created_at: string; // ISO dato-streng fra Supabase
-  // timestamp feltet er fjernet
+  words_found: string[];
+  word_count: number;
+  longest_word: string | null;
+  game_mode: string;
+  difficulty: string;
+  duration_seconds: number | null;
+  created_at: string;
+  daily_date: string | null;
+  // Joined from profiles
+  profiles?: {
+    username: string | null;
+    display_name: string | null;
+  };
 }
 
