@@ -3,10 +3,6 @@ import { Board, Letter, LetterType } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bomb, Snowflake, Sparkles, Link, Timer, Lock } from 'lucide-react';
 
-// Check if device prefers reduced motion
-const prefersReducedMotion = typeof window !== 'undefined' &&
-  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
 interface GameBoardProps {
   board: Board;
   onLetterClick: (letter: Letter) => void;
