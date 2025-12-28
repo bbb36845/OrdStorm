@@ -94,6 +94,30 @@
   "startScreen": {
     "subtitle": "Form words from falling letters before the board fills up!",
     "selectLanguage": "Select Language",
-    "start": "Start Game"
+    "start": "Start Game",
+    "dailyChallenge": "Daily Challenge",
+    "endless": "Endless Mode"
+  },
+  "daily": {
+    "title": "Daily Challenge",
+    "subtitle": "Same puzzle for everyone today!",
+    "alreadyCompleted": "You've already completed today's challenge",
+    "yourResult": "Your result",
+    "rank": "Rank #{{rank}}",
+    "comeBackTomorrow": "Come back tomorrow for a new challenge!",
+    "leaderboard": "Today's Leaderboard",
+    "loading": "Loading challenge...",
+    "error": "Could not load daily challenge"
+  },
+  "share": {
+    "button": "Share Result",
+    "copied": "Copied to clipboard!",
+    "title": "LetsWord",
+    "dailyResult": "Daily Challenge {{date}}",
+    "endlessResult": "Endless Mode",
+    "score": "Score: {{score}}",
+    "words": "Words: {{count}}",
+    "longestWord": "Longest: {{word}}",
+    "playNow": "Play now at letsword.app"
   }
 }

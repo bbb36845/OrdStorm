@@ -1,14 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Zap, Play, Info } from 'lucide-react';
+import { Zap, Info, Calendar, Infinity as InfinityIcon } from 'lucide-react';
 import { Language } from '../i18n';
+import { GameMode } from '../types';
 
 interface StartScreenProps {
-  onStart: () => void;
+  onStart: (mode: GameMode) => void;
   onLanguageSelect: (lang: Language) => void;
   selectedLanguage: Language;
   onShowHowToPlay: () => void;
+  dailyChallengeCompleted?: boolean;
 }
 
 const StartScreen: React.FC<StartScreenProps> = ({
@@ -16,6 +18,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
   onLanguageSelect,
   selectedLanguage,
   onShowHowToPlay,
+  dailyChallengeCompleted = false,
 }) => {
   const { t } = useTranslation();
 
@@ -63,7 +66,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
           LetsWord
         </motion.h1>
 
-        <p className="text-white/80 text-lg mb-12 max-w-md mx-auto">
+        <p className="text-white/80 text-lg mb-8 max-w-md mx-auto">
           {t('startScreen.subtitle', 'Form words from falling letters before the board fills up!')}
         </p>
 
@@ -129,26 +132,59 @@ const StartScreen: React.FC<StartScreenProps> = ({
           </div>
         </div>
 
-        {/* Start Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onStart}
-          className="flex items-center justify-center gap-3 mx-auto px-12 py-5
-            bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700
-            text-white text-2xl font-bold rounded-2xl shadow-2xl hover:shadow-green-500/30
-            transition-all btn-premium"
-        >
-          <Play size={28} fill="currentColor" />
-          {t('startScreen.start', 'Start Game')}
-        </motion.button>
+        {/* Game Mode Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+          {/* Daily Challenge Button */}
+          <motion.button
+            whileHover={{ scale: dailyChallengeCompleted ? 1 : 1.05 }}
+            whileTap={{ scale: dailyChallengeCompleted ? 1 : 0.95 }}
+            onClick={() => !dailyChallengeCompleted && onStart('daily')}
+            disabled={dailyChallengeCompleted}
+            className={`flex items-center justify-center gap-3 px-8 py-4
+              ${dailyChallengeCompleted
+                ? 'bg-gray-400/50 cursor-not-allowed'
+                : 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 btn-premium'
+              }
+              text-white text-lg font-bold rounded-2xl shadow-2xl
+              transition-all relative`}
+          >
+            <Calendar size={24} />
+            <div className="text-left">
+              <div>{t('startScreen.dailyChallenge', 'Daily Challenge')}</div>
+              {dailyChallengeCompleted && (
+                <div className="text-xs font-normal opacity-80">
+                  {t('daily.alreadyCompleted', 'Completed today')}
+                </div>
+              )}
+            </div>
+            {dailyChallengeCompleted && (
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs">✓</span>
+              </div>
+            )}
+          </motion.button>
+
+          {/* Endless Mode Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onStart('endless')}
+            className="flex items-center justify-center gap-3 px-8 py-4
+              bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700
+              text-white text-lg font-bold rounded-2xl shadow-2xl hover:shadow-green-500/30
+              transition-all btn-premium"
+          >
+            <InfinityIcon size={24} />
+            {t('startScreen.endless', 'Endless Mode')}
+          </motion.button>
+        </div>
 
         {/* How to Play */}
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onShowHowToPlay}
-          className="mt-6 flex items-center justify-center gap-2 mx-auto px-6 py-3
+          className="flex items-center justify-center gap-2 mx-auto px-6 py-3
             bg-white/20 hover:bg-white/30 backdrop-blur-sm
             text-white font-medium rounded-xl transition-all"
         >

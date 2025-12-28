@@ -8,16 +8,20 @@ import PowerUpBar from "./components/Game/PowerUpBar";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
 import StartScreen from "./components/StartScreen";
+import ShareResultButton from "./components/Game/ShareResultButton";
+import DailyChallengeLeaderboard from "./components/Game/DailyChallengeLeaderboard";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { useConfetti } from "./components/Game/Confetti";
-import { GameState, Letter, PowerUpType } from "./types";
+import { GameState, Letter, PowerUpType, GameMode, DailyChallenge, ShareableResult } from "./types";
 import { Language } from "./i18n";
 import {
   initializeGameState,
+  initializeGameStateSeeded,
   handleLetterClick as logicHandleLetterClick,
   clearCurrentWord as logicClearCurrentWord,
   submitWord as logicSubmitWord,
   addLetterToBoard as logicAddLetterToBoard,
+  addLetterToBoardSeeded as logicAddLetterToBoardSeeded,
   updateTickingBombs as logicUpdateTickingBombs,
   updateFreezeStatus as logicUpdateFreezeStatus,
   assignWildCardLetter as logicAssignWildCardLetter,
@@ -28,6 +32,13 @@ import {
   getDisplayWordString,
   initializeWordList
 } from "./components/Game/GameLogic";
+import { SeededRandom } from "./lib/seededRandom";
+import {
+  getDailyChallenge,
+  hasCompletedDailyChallenge,
+  saveDailyChallengeResult,
+  getUserDailyRank
+} from "./lib/dailyChallenge";
 import {
   Info,
   Repeat,
@@ -62,6 +73,13 @@ const AppContent: React.FC = () => {
 
   // Game started state - show start screen first
   const [gameStarted, setGameStarted] = useState(false);
+
+  // Game mode state
+  const [gameMode, setGameMode] = useState<GameMode>('endless');
+  const [_dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
+  const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
+  const [dailyRank, setDailyRank] = useState<number | null>(null);
+  const seededRngRef = useRef<SeededRandom | null>(null);
 
   // Wild card picker state
   const [isWildCardPickerOpen, setIsWildCardPickerOpen] = useState(false);
@@ -163,6 +181,24 @@ const AppContent: React.FC = () => {
     }
   };
 
+  // Check daily challenge completion status when user or language changes
+  useEffect(() => {
+    const checkDailyCompletion = async () => {
+      if (anonUserId) {
+        const completed = await hasCompletedDailyChallenge(anonUserId, language);
+        setDailyChallengeCompleted(completed);
+        if (completed) {
+          const rank = await getUserDailyRank(anonUserId, language);
+          setDailyRank(rank);
+        }
+      } else {
+        setDailyChallengeCompleted(false);
+        setDailyRank(null);
+      }
+    };
+    checkDailyCompletion();
+  }, [anonUserId, language]);
+
   // Initialize word validation (now instant - server-side via Supabase RPC)
   useEffect(() => {
     initializeWordList(); // Just logs ready status, no actual loading
@@ -174,16 +210,38 @@ const AppContent: React.FC = () => {
     if (gameState.isGameOver && gameState.score > 0) {
       const longestWord = gameState.foundWords.reduce((a, b) => a.length >= b.length ? a : b, '');
 
-      if (username && anonUserId) {
-        // User has username - save to Supabase automatically
-        saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord, language);
-      } else {
-        // No username yet - prompt for one
-        setScoreToSave({
-          score: gameState.score,
-          wordsFound: gameState.foundWords,
-          longestWord: longestWord || null
-        });
+      // Handle daily challenge completion
+      if (gameMode === 'daily' && anonUserId) {
+        const saveDailyResult = async () => {
+          const saved = await saveDailyChallengeResult(
+            anonUserId,
+            language,
+            gameState.score,
+            gameState.foundWords,
+            longestWord || null
+          );
+          if (saved) {
+            setDailyChallengeCompleted(true);
+            const rank = await getUserDailyRank(anonUserId, language);
+            setDailyRank(rank);
+          }
+        };
+        saveDailyResult();
+      }
+
+      // Handle endless mode score saving
+      if (gameMode === 'endless') {
+        if (username && anonUserId) {
+          // User has username - save to Supabase automatically
+          saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord, language);
+        } else {
+          // No username yet - prompt for one
+          setScoreToSave({
+            score: gameState.score,
+            wordsFound: gameState.foundWords,
+            longestWord: longestWord || null
+          });
+        }
       }
 
       // Update personal best locally
@@ -413,11 +471,15 @@ const AppContent: React.FC = () => {
     const addLetterInterval = setInterval(() => {
       setGameState(prevState => {
         if (prevState.isGameOver) return prevState;
+        // Use seeded random for daily challenges, regular random for endless
+        if (gameMode === 'daily' && seededRngRef.current) {
+          return logicAddLetterToBoardSeeded(prevState, language, seededRngRef.current);
+        }
         return logicAddLetterToBoard(prevState, language);
       });
     }, 1200); // 1.2 seconds between letters (20% slower)
     return () => clearInterval(addLetterInterval);
-  }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, language]);
+  }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, language, gameMode]);
 
   // Ticking bomb update loop - every 500ms to update bomb timers
   useEffect(() => {
@@ -445,11 +507,34 @@ const AppContent: React.FC = () => {
   }, [gameState.isFrozen]);
 
   // Handle start game
-  const handleStartGame = useCallback(() => {
-    setGameStarted(true);
-    setGameState(initializeGameState(6, 6));
-    setGameState(prev => ({ ...prev, isWordListLoading: false }));
-  }, []);
+  const handleStartGame = useCallback(async (mode: GameMode) => {
+    setGameMode(mode);
+
+    if (mode === 'daily') {
+      // Fetch today's daily challenge
+      const challenge = await getDailyChallenge(language);
+      if (!challenge) {
+        console.error('Could not load daily challenge');
+        return;
+      }
+      setDailyChallenge(challenge);
+
+      // Create seeded RNG from challenge seed
+      const rng = new SeededRandom(challenge.seed);
+      seededRngRef.current = rng;
+
+      // Initialize game state with seeded random
+      setGameStarted(true);
+      setGameState(initializeGameStateSeeded(6, 6, rng));
+      setGameState(prev => ({ ...prev, isWordListLoading: false }));
+    } else {
+      // Endless mode - regular random
+      seededRngRef.current = null;
+      setGameStarted(true);
+      setGameState(initializeGameState(6, 6));
+      setGameState(prev => ({ ...prev, isWordListLoading: false }));
+    }
+  }, [language]);
 
   // Handle language selection from start screen
   const handleLanguageSelect = useCallback((lang: Language) => {
@@ -489,6 +574,7 @@ const AppContent: React.FC = () => {
           onLanguageSelect={handleLanguageSelect}
           selectedLanguage={language}
           onShowHowToPlay={() => setIsHowToPlayModalOpen(true)}
+          dailyChallengeCompleted={dailyChallengeCompleted}
         />
         <HowToPlayModal isOpen={isHowToPlayModalOpen} onClose={() => setIsHowToPlayModalOpen(false)} />
       </>
@@ -532,6 +618,11 @@ const AppContent: React.FC = () => {
           <h1 className="text-xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
             {t('app.title')}
           </h1>
+          {gameMode === 'daily' && (
+            <span className="ml-2 px-2 py-0.5 bg-orange-500/90 text-white text-xs font-bold rounded-full">
+              {t('daily.title')}
+            </span>
+          )}
         </motion.div>
 
         <motion.div
@@ -723,7 +814,7 @@ const AppContent: React.FC = () => {
               )}
 
               {/* Score saved confirmation */}
-              {username && !scoreToSave && (
+              {username && !scoreToSave && gameMode === 'endless' && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -734,19 +825,66 @@ const AppContent: React.FC = () => {
                 </motion.p>
               )}
 
-              <motion.button
+              {/* Daily challenge rank */}
+              {gameMode === 'daily' && dailyRank && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9 }}
+                  className="text-lg font-bold text-amber-600 mt-3 relative z-10"
+                >
+                  {dailyRank <= 3 ? (dailyRank === 1 ? '🥇' : dailyRank === 2 ? '🥈' : '🥉') : '🏅'} {t('daily.rank', { rank: dailyRank })}
+                </motion.p>
+              )}
+
+              {/* Share button */}
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1 }}
+                className="mt-4 relative z-10"
+              >
+                <ShareResultButton
+                  result={{
+                    score: gameState.score,
+                    wordCount: gameState.foundWords.length,
+                    longestWord: gameState.foundWords.reduce((a, b) => a.length >= b.length ? a : b, '') || null,
+                    date: new Date().toLocaleDateString(language === 'da' ? 'da-DK' : 'en-GB'),
+                    language,
+                    gameMode,
+                    rank: dailyRank || undefined
+                  } as ShareableResult}
+                />
+              </motion.div>
+
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRestartGame}
-                className="mt-6 flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50
+                className="mt-4 flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-50
                   text-gray-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all relative z-10"
               >
                 <Repeat size={18} />
                 {t('gameOver.playAgain')}
               </motion.button>
+
+              {/* Daily Challenge Leaderboard */}
+              {gameMode === 'daily' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="mt-6 w-full max-w-sm relative z-10"
+                >
+                  <DailyChallengeLeaderboard
+                    currentUserId={anonUserId}
+                    language={language}
+                  />
+                </motion.div>
+              )}
             </motion.div>
           )}
 

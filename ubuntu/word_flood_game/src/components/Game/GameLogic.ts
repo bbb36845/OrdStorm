@@ -794,3 +794,137 @@ export const activateTimeFreeze = (state: GameState): GameState => {
 export const clearPendingPowerUp = (state: GameState): GameState => {
   return { ...state, pendingPowerUp: null };
 };
+
+// ============================================
+// DAILY CHALLENGE - SEEDED RANDOM FUNCTIONS
+// ============================================
+
+import { SeededRandom } from '../../lib/seededRandom';
+
+// Helper function to select a random special letter type based on weights using seeded random
+const selectRandomSpecialTypeSeeded = (rng: SeededRandom): LetterType => {
+  const totalWeight = SPECIAL_LETTER_WEIGHTS.reduce((sum, item) => sum + item.weight, 0);
+  let random = rng.next() * totalWeight;
+
+  for (const item of SPECIAL_LETTER_WEIGHTS) {
+    random -= item.weight;
+    if (random <= 0) {
+      return item.type;
+    }
+  }
+  return 'bonus2x'; // Fallback
+};
+
+// Seeded version of addLetterToBoard for daily challenges
+// Uses SeededRandom to ensure all players get the same letter sequence
+export const addLetterToBoardSeeded = (
+  state: GameState,
+  language: 'da' | 'en' = 'da',
+  rng: SeededRandom
+): GameState => {
+  if (state.isGameOver) return state;
+
+  // Don't add letters if frozen
+  if (state.isFrozen) return state;
+
+  const emptyCells: { r: number; c: number }[] = [];
+  for (let r = 0; r < state.boardSize.rows; r++) {
+    for (let c = 0; c < state.boardSize.cols; c++) {
+      if (state.board[r][c] === null) {
+        emptyCells.push({ r, c });
+      }
+    }
+  }
+
+  if (emptyCells.length === 0) {
+    return { ...state, isGameOver: true };
+  }
+
+  // Use seeded random to pick empty cell
+  const randomEmptyCell = emptyCells[rng.nextInt(0, emptyCells.length)];
+  const { r, c } = randomEmptyCell;
+
+  const newBoard = state.board.map(row => [...row]);
+  const weightedLetters = getWeightedLetters(language);
+  const randomChar = rng.pick(weightedLetters);
+
+  // Determine letter type using seeded random
+  let letterType: LetterType = 'normal';
+  let updatedNormalLettersSinceLastBonus = state.normalLettersSinceLastBonus + 1;
+  let updatedNextBonusIn = state.nextBonusIn;
+  let updatedLettersSinceSpecial = state.lettersSinceSpecial + 1;
+  let updatedNextSpecialIn = state.nextSpecialIn;
+
+  // Check for bonus (2x) letter - legacy system
+  if (updatedNormalLettersSinceLastBonus >= state.nextBonusIn) {
+    letterType = 'bonus2x';
+    updatedNormalLettersSinceLastBonus = 0;
+    updatedNextBonusIn = 10 + rng.nextInt(0, 21);
+  }
+  // Check for special letter (overrides bonus if triggered)
+  else if (updatedLettersSinceSpecial >= state.nextSpecialIn) {
+    letterType = selectRandomSpecialTypeSeeded(rng);
+    updatedLettersSinceSpecial = 0;
+    updatedNextSpecialIn = 8 + rng.nextInt(0, 11); // 8-18 letters until next special
+    // Reset bonus counter if we spawned a bonus-type special
+    if (letterType === 'bonus2x' || letterType === 'bonus3x') {
+      updatedNormalLettersSinceLastBonus = 0;
+      updatedNextBonusIn = 10 + rng.nextInt(0, 21);
+    }
+  }
+
+  // Wild cards show a special character
+  const displayChar = letterType === 'wild' ? '?' : randomChar;
+
+  newBoard[r][c] = createLetter(displayChar, r, c, letterType);
+
+  // Check if board is full
+  let isNowFull = true;
+  for (let i = 0; i < state.boardSize.rows; i++) {
+    for (let j = 0; j < state.boardSize.cols; j++) {
+      if (newBoard[i][j] === null) {
+        isNowFull = false;
+        break;
+      }
+    }
+    if (!isNowFull) break;
+  }
+
+  return {
+    ...state,
+    board: newBoard,
+    isGameOver: isNowFull,
+    normalLettersSinceLastBonus: updatedNormalLettersSinceLastBonus,
+    nextBonusIn: updatedNextBonusIn,
+    lettersSinceSpecial: updatedLettersSinceSpecial,
+    nextSpecialIn: updatedNextSpecialIn,
+  };
+};
+
+// Initialize game state with seeded random values for daily challenge
+export const initializeGameStateSeeded = (rows: number, cols: number, rng: SeededRandom): GameState => {
+  return {
+    board: createInitialBoard(rows, cols),
+    currentWord: [],
+    score: 0,
+    foundWords: [],
+    isGameOver: false,
+    boardSize: { rows, cols },
+    isLoading: false,
+    errorMessage: null,
+    isWordListLoading: false,
+    wordListErrorMessage: null,
+    normalLettersSinceLastBonus: 0,
+    nextBonusIn: 10 + rng.nextInt(0, 21), // Seeded initial bonus timing
+    // New power-up and streak tracking
+    isFrozen: false,
+    freezeEndTime: null,
+    wordStreak: 0,
+    lastWordTime: null,
+    lettersSinceSpecial: 0,
+    nextSpecialIn: 8 + rng.nextInt(0, 11), // Seeded initial special timing
+    // Earnable power-ups
+    powerUps: { nuke: 0, shuffle: 0, timeFreeze: 0 },
+    pendingPowerUp: null,
+  };
+};
