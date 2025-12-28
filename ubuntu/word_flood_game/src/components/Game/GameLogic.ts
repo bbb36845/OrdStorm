@@ -317,20 +317,24 @@ export const validateWordWithRetry = async (
   maxRetries: number = 2
 ): Promise<ValidationResult> => {
   if (word.length < MIN_WORD_LENGTH) {
+    console.log(`[WordValidation] Word "${word}" too short (min ${MIN_WORD_LENGTH})`);
     return { valid: false, reason: 'invalid_word' };
   }
+
+  const wordLower = word.toLowerCase();
+  console.log(`[WordValidation] Validating "${wordLower}" (lang: ${language})`);
 
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const { data, error } = await supabase.rpc('validate_word', {
-        word_to_check: word.toLowerCase(),
+        word_to_check: wordLower,
         lang: language
       });
 
       if (error) {
-        console.error(`Error validating word (attempt ${attempt + 1}):`, error);
+        console.error(`[WordValidation] RPC error (attempt ${attempt + 1}):`, error);
         lastError = new Error(error.message);
         // Wait before retry (exponential backoff)
         if (attempt < maxRetries) {
@@ -340,13 +344,14 @@ export const validateWordWithRetry = async (
       }
 
       // Successful response - return the result
+      console.log(`[WordValidation] Result for "${wordLower}": ${data === true ? 'VALID' : 'INVALID'}`);
       if (data === true) {
         return { valid: true };
       } else {
         return { valid: false, reason: 'invalid_word' };
       }
     } catch (err) {
-      console.error(`Error calling validate_word RPC (attempt ${attempt + 1}):`, err);
+      console.error(`[WordValidation] Exception (attempt ${attempt + 1}):`, err);
       lastError = err instanceof Error ? err : new Error('Unknown error');
       // Wait before retry
       if (attempt < maxRetries) {
@@ -356,7 +361,7 @@ export const validateWordWithRetry = async (
   }
 
   // All retries failed - this is a network error
-  console.error('All validation attempts failed:', lastError);
+  console.error(`[WordValidation] All attempts failed for "${wordLower}":`, lastError);
   return { valid: false, reason: 'network_error' };
 };
 
@@ -432,6 +437,14 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
   // Get the word string (with wild card assignments)
   const submittedWordString = getWordString(state.currentWord);
   const displayWordString = getDisplayWordString(state.currentWord);
+
+  // Debug: Log the letters being submitted
+  console.log(`[SubmitWord] Letters:`, state.currentWord.map(l => ({
+    char: l.char,
+    type: l.letterType,
+    wildAssign: l.wildCardAssignment
+  })));
+  console.log(`[SubmitWord] Word string: "${submittedWordString}" (display: "${displayWordString}")`);
 
   // Server-side validation via Supabase RPC with retry
   const validationResult = await validateWordWithRetry(submittedWordString, language);
