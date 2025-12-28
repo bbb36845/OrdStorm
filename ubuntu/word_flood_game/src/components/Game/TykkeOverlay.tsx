@@ -110,7 +110,11 @@ const TykkeOverlay: React.FC<TykkeOverlayProps> = ({ isActive, onAnimationComple
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-xl text-white/90 text-center mt-2 drop-shadow-md"
+                  className="text-2xl font-bold text-center mt-3"
+                  style={{
+                    color: '#fbbf24',
+                    textShadow: '0 0 10px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9), 0 0 20px rgba(251, 191, 36, 0.5)'
+                  }}
                 >
                   {t('tykke.subtitle')}
                 </motion.p>
