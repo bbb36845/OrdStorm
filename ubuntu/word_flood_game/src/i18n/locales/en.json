@@ -3,7 +3,7 @@
     "title": "LetsWord",
     "subtitle": "Word Game",
     "loading": "Loading game...",
-    "footer": "© 2025 Mark Jensen"
+    "footer": "© 2025 Jensen"
   },
   "game": {
     "currentWord": "Current word",
