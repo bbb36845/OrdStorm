@@ -477,7 +477,7 @@ const AppContent: React.FC = () => {
         }
         return logicAddLetterToBoard(prevState, language);
       });
-    }, 1200); // 1.2 seconds between letters (20% slower)
+    }, 1440); // 1.44 seconds between letters (20% slower than before)
     return () => clearInterval(addLetterInterval);
   }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, language, gameMode]);
 
