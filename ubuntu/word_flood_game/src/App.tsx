@@ -584,7 +584,7 @@ const App: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="h-[312px] flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border border-indigo-100/50 relative overflow-hidden"
+              className="min-h-[320px] py-8 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border border-indigo-100/50 relative overflow-hidden"
             >
               {/* Background sparkles */}
               <div className="absolute inset-0 overflow-hidden">
@@ -831,20 +831,24 @@ const App: React.FC = () => {
       />
 
       {/* Username Modal */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isUsernameModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            style={{ WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden' }}
             onClick={() => setIsUsernameModalOpen(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.15 }}
               className="bg-white p-6 sm:p-8 rounded-2xl shadow-2xl max-w-md w-full relative"
+              style={{ WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
               onClick={(e) => e.stopPropagation()}
             >
               <button
