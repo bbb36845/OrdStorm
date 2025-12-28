@@ -19,6 +19,7 @@ export interface Letter {
   col: number;
   tickingBombTimer?: number; // Seconds remaining before explosion (for tickingBomb type)
   createdAt?: number; // Timestamp for ticking bomb countdown
+  wildCardAssignment?: string; // The letter assigned to a wild card (when selected in currentWord)
 }
 
 export type Board = (Letter | null)[][];

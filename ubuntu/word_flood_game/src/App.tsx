@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./SupabaseClient";
 import GameBoard from "./components/Game/GameBoard";
 import HowToPlayModal from "./components/Game/HowToPlayModal";
+import WildCardPicker from "./components/Game/WildCardPicker";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
 import { useConfetti } from "./components/Game/Confetti";
@@ -14,6 +15,8 @@ import {
   addLetterToBoard as logicAddLetterToBoard,
   updateTickingBombs as logicUpdateTickingBombs,
   updateFreezeStatus as logicUpdateFreezeStatus,
+  assignWildCardLetter as logicAssignWildCardLetter,
+  getDisplayWordString,
   initializeWordList
 } from "./components/Game/GameLogic";
 import {
@@ -43,6 +46,10 @@ const App: React.FC = () => {
   const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [isSavingUsername, setIsSavingUsername] = useState(false);
+
+  // Wild card picker state
+  const [isWildCardPickerOpen, setIsWildCardPickerOpen] = useState(false);
+  const [pendingWildCardId, setPendingWildCardId] = useState<string | null>(null);
 
   // Confetti effects
   const { celebrateWord, celebrateLongWord, celebrateGameOver } = useConfetti();
@@ -251,15 +258,51 @@ const App: React.FC = () => {
   };
 
   // Game handlers
-  const currentWordString = gameState.currentWord.map((l) => l.char).join("");
+  const currentWordString = getDisplayWordString(gameState.currentWord);
 
   const onLetterClickHandler = useCallback(
     (letter: Letter) => {
       if (gameState.isGameOver || gameState.isLoading || gameState.isWordListLoading) return;
-      setGameState((prevState) => logicHandleLetterClick(prevState, letter));
+
+      // Check if this letter is already in the current word
+      const alreadySelected = gameState.currentWord.find(l => l.id === letter.id);
+      if (alreadySelected) return;
+
+      // If it's a wild card, show the letter picker
+      if (letter.letterType === 'wild') {
+        // First add the letter to the word
+        setGameState((prevState) => logicHandleLetterClick(prevState, letter));
+        // Then show the picker
+        setPendingWildCardId(letter.id);
+        setIsWildCardPickerOpen(true);
+      } else {
+        setGameState((prevState) => logicHandleLetterClick(prevState, letter));
+      }
     },
-    [gameState.isGameOver, gameState.isLoading, gameState.isWordListLoading]
+    [gameState.isGameOver, gameState.isLoading, gameState.isWordListLoading, gameState.currentWord]
   );
+
+  // Handle wild card letter selection
+  const onWildCardSelect = useCallback((selectedLetter: string) => {
+    if (pendingWildCardId) {
+      setGameState((prevState) => logicAssignWildCardLetter(prevState, pendingWildCardId, selectedLetter));
+    }
+    setIsWildCardPickerOpen(false);
+    setPendingWildCardId(null);
+  }, [pendingWildCardId]);
+
+  // Handle wild card picker cancel
+  const onWildCardCancel = useCallback(() => {
+    // Remove the wild card from the current word if cancelled
+    if (pendingWildCardId) {
+      setGameState((prevState) => ({
+        ...prevState,
+        currentWord: prevState.currentWord.filter(l => l.id !== pendingWildCardId),
+      }));
+    }
+    setIsWildCardPickerOpen(false);
+    setPendingWildCardId(null);
+  }, [pendingWildCardId]);
 
   const onClearWordHandler = useCallback(() => {
     if (gameState.isGameOver || gameState.isLoading || gameState.isWordListLoading) return;
@@ -711,6 +754,13 @@ const App: React.FC = () => {
 
       {/* How to Play Modal */}
       <HowToPlayModal isOpen={isHowToPlayModalOpen} onClose={() => setIsHowToPlayModalOpen(false)} />
+
+      {/* Wild Card Letter Picker */}
+      <WildCardPicker
+        isOpen={isWildCardPickerOpen}
+        onSelect={onWildCardSelect}
+        onCancel={onWildCardCancel}
+      />
 
       {/* Username Modal */}
       <AnimatePresence>

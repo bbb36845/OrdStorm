@@ -278,14 +278,39 @@ export const validateDanishWord = async (word: string): Promise<boolean> => {
   }
 };
 
-// Build the actual word string (handling wild cards)
+// Build the actual word string for validation (using wild card assignments)
 export const getWordString = (currentWord: Letter[]): string => {
-  return currentWord.map(l => l.letterType === 'wild' ? '*' : l.char).join("");
+  return currentWord.map(l => {
+    if (l.letterType === 'wild' && l.wildCardAssignment) {
+      return l.wildCardAssignment;
+    }
+    return l.char;
+  }).join("");
 };
 
-// For display purposes, get the word with actual characters
+// For display purposes, get the word with actual characters (showing wild card assignments)
 export const getDisplayWordString = (currentWord: Letter[]): string => {
-  return currentWord.map(l => l.char).join("");
+  return currentWord.map(l => {
+    if (l.letterType === 'wild' && l.wildCardAssignment) {
+      return l.wildCardAssignment;
+    }
+    return l.char;
+  }).join("");
+};
+
+// Check if all wild cards in current word have been assigned
+export const hasUnassignedWildCards = (currentWord: Letter[]): boolean => {
+  return currentWord.some(l => l.letterType === 'wild' && !l.wildCardAssignment);
+};
+
+// Assign a letter to a wild card
+export const assignWildCardLetter = (state: GameState, wildCardId: string, letter: string): GameState => {
+  return {
+    ...state,
+    currentWord: state.currentWord.map(l =>
+      l.id === wildCardId ? { ...l, wildCardAssignment: letter } : l
+    ),
+  };
 };
 
 export const submitWord = async (state: GameState): Promise<GameState> => {
@@ -293,7 +318,14 @@ export const submitWord = async (state: GameState): Promise<GameState> => {
     return { ...state, errorMessage: "Ordet skal være mindst 3 bogstaver langt.", currentWord: [] };
   }
 
-  const submittedWordString = state.currentWord.map(l => l.char).join("");
+  // Check if all wild cards have been assigned
+  if (hasUnassignedWildCards(state.currentWord)) {
+    return { ...state, errorMessage: "Vælg et bogstav for jokeren først." };
+  }
+
+  // Get the word string (with wild card assignments)
+  const submittedWordString = getWordString(state.currentWord);
+  const displayWordString = getDisplayWordString(state.currentWord);
 
   // Server-side validation via Supabase RPC
   const isValidWord = await validateDanishWord(submittedWordString);
@@ -304,7 +336,7 @@ export const submitWord = async (state: GameState): Promise<GameState> => {
       ...state,
       currentWord: [],
       wordStreak: 0,
-      errorMessage: `"${submittedWordString.toUpperCase()}" er ikke et gyldigt dansk ord.`,
+      errorMessage: `"${displayWordString.toUpperCase()}" er ikke et gyldigt dansk ord.`,
     };
   }
 
@@ -353,7 +385,7 @@ export const submitWord = async (state: GameState): Promise<GameState> => {
   return {
     ...state,
     board: newBoard,
-    foundWords: [...state.foundWords, submittedWordString.toUpperCase()],
+    foundWords: [...state.foundWords, displayWordString.toUpperCase()],
     currentWord: [],
     score: state.score + wordScore,
     errorMessage: null,
