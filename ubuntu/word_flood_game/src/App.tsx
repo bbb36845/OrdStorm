@@ -583,38 +583,17 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen animated-gradient-bg p-4 font-sans antialiased relative overflow-hidden">
-      {/* Floating background decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"
-        />
-        <motion.div
-          animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-40 right-20 w-48 h-48 bg-purple-300/20 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{ y: [0, 15, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-40 left-1/4 w-40 h-40 bg-indigo-300/15 rounded-full blur-2xl"
-        />
+      {/* Static background decorations - hidden on mobile for performance */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+        <div className="absolute top-40 right-20 w-48 h-48 bg-purple-300/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-indigo-300/15 rounded-full blur-2xl" />
       </div>
 
       {/* Header */}
       <header className="w-full max-w-4xl mb-4 sm:mb-6 flex justify-between items-center relative z-10">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-1 sm:gap-2"
-        >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity }}
-          >
-            <Zap className="w-5 h-5 sm:w-8 sm:h-8 text-yellow-300 drop-shadow-lg" />
-          </motion.div>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Zap className="w-5 h-5 sm:w-8 sm:h-8 text-yellow-300 drop-shadow-lg" />
           <h1 className="text-xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
             {t('app.title')}
           </h1>
@@ -623,13 +602,9 @@ const AppContent: React.FC = () => {
               {t('daily.title')}
             </span>
           )}
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-1 sm:gap-3"
-        >
+        <div className="flex items-center gap-1 sm:gap-3">
           {username && (
             <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 glass-card rounded-xl">
               <User size={14} className="text-indigo-600 sm:w-4 sm:h-4" />
@@ -653,7 +628,7 @@ const AppContent: React.FC = () => {
             <Info size={16} />
             <span className="hidden sm:inline">{t('howToPlay.button')}</span>
           </button>
-        </motion.div>
+        </div>
       </header>
 
       {/* Main Content */}
@@ -994,27 +969,17 @@ const AppContent: React.FC = () => {
         </main>
 
         {/* Leaderboard */}
-        <motion.aside
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-2/5"
-        >
+        <aside className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-2/5">
           <Leaderboard key={`${leaderboardRefreshKey}-${language}`} currentUserId={anonUserId} language={language} />
-        </motion.aside>
+        </aside>
       </div>
 
       {/* Footer */}
-      <motion.footer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="mt-8 text-center relative z-10"
-      >
+      <footer className="mt-8 text-center relative z-10">
         <p className="text-white/60 text-xs font-medium">
           {t('app.footer')}
         </p>
-      </motion.footer>
+      </footer>
 
       {/* How to Play Modal */}
       <HowToPlayModal isOpen={isHowToPlayModalOpen} onClose={() => setIsHowToPlayModalOpen(false)} />

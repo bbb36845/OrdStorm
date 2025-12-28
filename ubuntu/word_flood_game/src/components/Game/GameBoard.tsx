@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Board, Letter, LetterType } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bomb, Snowflake, Sparkles, Link, Timer, Lock } from 'lucide-react';
+
+// Check if device prefers reduced motion
+const prefersReducedMotion = typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 interface GameBoardProps {
   board: Board;
@@ -82,9 +86,10 @@ const getLetterIcon = (letterType: LetterType) => {
 };
 
 const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord, isFrozen }) => {
-  const isSelected = (letterId: string) => {
-    return currentWord.some(l => l.id === letterId);
-  };
+  // Memoize selection state for performance
+  const selectedIds = useMemo(() => new Set(currentWord.map(l => l.id)), [currentWord]);
+
+  const isSelected = (letterId: string) => selectedIds.has(letterId);
 
   const getSelectionOrder = (letterId: string) => {
     return currentWord.findIndex(l => l.id === letterId) + 1;
@@ -123,16 +128,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord
       className={`game-board grid grid-cols-6 gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-2xl relative ${isFrozen ? 'ring-4 ring-cyan-400 ring-opacity-50' : ''}`}
       style={{ touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
     >
-      {/* Freeze overlay */}
+      {/* Freeze overlay - simplified animation */}
       {isFrozen && (
         <div className="absolute inset-0 bg-cyan-400/10 rounded-2xl pointer-events-none z-10 flex items-center justify-center">
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1, repeat: Infinity }}
-            className="text-cyan-400"
-          >
+          <div className="text-cyan-400 animate-pulse">
             <Snowflake size={48} />
-          </motion.div>
+          </div>
         </div>
       )}
 
@@ -149,20 +150,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord
             return (
               <motion.div
                 key={letter ? letter.id : cellKey}
-                initial={letter ? { opacity: 0, scale: 0.3 } : { opacity: 0.5 }}
-                animate={letter ? {
-                  opacity: 1,
-                  scale: selected ? 1.05 : 1,
-                  y: selected ? -3 : 0,
-                } : { opacity: 1 }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
-                whileHover={letter ? { scale: 1.03 } : {}}
-                whileTap={letter ? { scale: 0.97 } : {}}
+                initial={letter ? { opacity: 0, scale: 0.8 } : false}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.15 }}
+                layout={false}
                 onTouchStart={letter ? handleTouchStart : undefined}
                 onTouchEnd={(e) => letter && handleTouchEnd(letter, e)}
                 onClick={(e) => letter && handleClick(letter, e)}
@@ -193,20 +185,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord
                       </motion.div>
                     )}
 
-                    {/* Special letter type indicator */}
+                    {/* Special letter type indicator - static for better performance */}
                     {isSpecial && !selected && icon && (
-                      <motion.div
-                        animate={letterType === 'tickingBomb' ? {
-                          scale: [1, 1.3, 1],
-                        } : {
-                          scale: [1, 1.2, 1],
-                          opacity: [0.8, 1, 0.8],
-                        }}
-                        transition={{
-                          duration: letterType === 'tickingBomb' ? 0.5 : 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
+                      <div
                         className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-lg z-20 ${
                           letterType === 'bonus2x' ? 'bg-yellow-600 text-white' :
                           letterType === 'bonus3x' ? 'bg-purple-600 text-white' :
@@ -214,24 +195,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord
                           letterType === 'wild' ? 'bg-gradient-to-r from-cyan-500 to-pink-500 text-white' :
                           letterType === 'ice' ? 'bg-cyan-500 text-white' :
                           letterType === 'chain' ? 'bg-emerald-600 text-white' :
-                          letterType === 'tickingBomb' ? 'bg-red-900 text-red-200' :
+                          letterType === 'tickingBomb' ? 'bg-red-900 text-red-200 animate-pulse' :
                           letterType === 'locked' ? 'bg-gray-600 text-gray-200' :
                           'bg-indigo-600 text-white'
                         }`}
                       >
                         {icon}
-                      </motion.div>
+                      </div>
                     )}
 
-                    {/* Ticking bomb timer display */}
+                    {/* Ticking bomb timer display - CSS animation only */}
                     {letterType === 'tickingBomb' && letter.tickingBombTimer !== undefined && !selected && (
-                      <motion.div
-                        animate={{ opacity: [1, 0.5, 1] }}
-                        transition={{ duration: 0.5, repeat: Infinity }}
-                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/70 text-red-400 text-xs font-bold px-1.5 py-0.5 rounded z-20"
-                      >
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/70 text-red-400 text-xs font-bold px-1.5 py-0.5 rounded z-20 animate-pulse">
                         {letter.tickingBombTimer}s
-                      </motion.div>
+                      </div>
                     )}
 
                     {/* Shimmer effect on hover */}

@@ -11,6 +11,7 @@ interface ProfileData {
 
 interface LeaderboardEntry {
   id: string;
+  user_id: string;
   score: number;
   created_at: string;
   profiles: ProfileData | ProfileData[] | null;
@@ -56,6 +57,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh, lan
         .from('scores')
         .select(`
           id,
+          user_id,
           score,
           created_at,
           profiles (
@@ -79,6 +81,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh, lan
         .from('scores')
         .select(`
           id,
+          user_id,
           score,
           created_at,
           profiles (
@@ -214,7 +217,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh, lan
         <div className="space-y-2">
           <AnimatePresence>
             {scores.map((entry, index) => {
-              const isCurrentUser = entry.profiles && currentUserId; // Simplified check
+              const isCurrentUser = currentUserId && entry.user_id === currentUserId;
               const displayName = getDisplayName(entry);
 
               return (

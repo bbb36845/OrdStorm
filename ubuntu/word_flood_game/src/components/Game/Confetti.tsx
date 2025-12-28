@@ -20,33 +20,33 @@ export const useConfetti = () => {
     });
   }, []);
 
-  // Big celebration for long words (5+ letters)
+  // Celebration for long words (5+ letters) - reduced intensity for better visibility
   const celebrateLongWord = useCallback(() => {
-    const duration = 2000;
-    const end = Date.now() + duration;
-
-    const frame = () => {
-      confetti({
-        particleCount: 3,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.7 },
-        colors: ['#fbbf24', '#f59e0b', '#d97706'],
-      });
-      confetti({
-        particleCount: 3,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.7 },
-        colors: ['#667eea', '#764ba2', '#8b5cf6'],
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    };
-
-    frame();
+    // Single burst from sides instead of continuous animation - less obtrusive
+    confetti({
+      particleCount: 20,
+      angle: 60,
+      spread: 40,
+      origin: { x: 0, y: 0.85 },
+      colors: ['#fbbf24', '#f59e0b'],
+      ticks: 100,
+      gravity: 1.8,
+      decay: 0.9,
+      startVelocity: 20,
+      disableForReducedMotion: true,
+    });
+    confetti({
+      particleCount: 20,
+      angle: 120,
+      spread: 40,
+      origin: { x: 1, y: 0.85 },
+      colors: ['#667eea', '#764ba2'],
+      ticks: 100,
+      gravity: 1.8,
+      decay: 0.9,
+      startVelocity: 20,
+      disableForReducedMotion: true,
+    });
   }, []);
 
   // Game over celebration
