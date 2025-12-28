@@ -227,6 +227,10 @@ const AppContent: React.FC = () => {
             setDailyChallengeCompleted(true);
             const rank = await getUserDailyRank(anonUserId, language);
             setDailyRank(rank);
+            // Update personal best for daily challenge scores too
+            if (gameState.score > personalBest) {
+              setPersonalBest(gameState.score);
+            }
           }
         };
         saveDailyResult();
@@ -237,19 +241,18 @@ const AppContent: React.FC = () => {
         if (username && anonUserId) {
           // User has username - save to Supabase automatically
           saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord, language);
+          // Update personal best locally only when score is actually saved
+          if (gameState.score > personalBest) {
+            setPersonalBest(gameState.score);
+          }
         } else {
-          // No username yet - prompt for one
+          // No username yet - prompt for one (personal best will be updated after they save)
           setScoreToSave({
             score: gameState.score,
             wordsFound: gameState.foundWords,
             longestWord: longestWord || null
           });
         }
-      }
-
-      // Update personal best locally
-      if (gameState.score > personalBest) {
-        setPersonalBest(gameState.score);
       }
     }
   }, [gameState.isGameOver]);
@@ -343,7 +346,12 @@ const AppContent: React.FC = () => {
       // Save the pending score if there is one
       if (scoreToSave) {
         await saveScoreToSupabase(userId, scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord, language);
+        // Update personal best to the saved score (this is the user's first saved score)
+        setPersonalBest(scoreToSave.score);
         setScoreToSave(null);
+      } else {
+        // New user with no score to save - reset personal best
+        setPersonalBest(0);
       }
 
       setIsUsernameModalOpen(false);
