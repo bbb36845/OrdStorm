@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { supabase } from "./SupabaseClient";
 import GameBoard from "./components/Game/GameBoard";
 import HowToPlayModal from "./components/Game/HowToPlayModal";
@@ -48,12 +48,12 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Confetti effects
-  const { celebrateWord, celebrateLongWord, celebrateGameOver, celebrateBonus } = useConfetti();
+  const { celebrateWord, celebrateLongWord, celebrateGameOver } = useConfetti();
   const prevScoreRef = useRef(0);
   const prevFoundWordsRef = useRef<string[]>([]);
 
   // Supabase Auth State
-  const [session, setSession] = useState<Session | null>(null);
+  const [_session, setSession] = useState<Session | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
@@ -68,7 +68,7 @@ const App: React.FC = () => {
     wordsFound: string[];
     longestWord: string | null;
   } | null>(null);
-  const [isSavingScore, setIsSavingScore] = useState(false);
+  const [_isSavingScore, setIsSavingScore] = useState(false);
 
   // Track score changes for confetti
   useEffect(() => {

@@ -3,14 +3,16 @@ import { supabase } from '../../SupabaseClient';
 import { Loader2, AlertTriangle, Trophy, RefreshCw, Crown, Medal, Award, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface ProfileData {
+  username: string | null;
+  display_name: string | null;
+}
+
 interface LeaderboardEntry {
   id: string;
   score: number;
   created_at: string;
-  profiles: {
-    username: string | null;
-    display_name: string | null;
-  } | null;
+  profiles: ProfileData | ProfileData[] | null;
 }
 
 interface LeaderboardProps {
@@ -121,8 +123,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
   };
 
   const getDisplayName = (entry: LeaderboardEntry): string => {
-    if (entry.profiles?.display_name) return entry.profiles.display_name;
-    if (entry.profiles?.username) return entry.profiles.username;
+    const profile = Array.isArray(entry.profiles) ? entry.profiles[0] : entry.profiles;
+    if (profile?.display_name) return profile.display_name;
+    if (profile?.username) return profile.username;
     return 'Anonym';
   };
 
