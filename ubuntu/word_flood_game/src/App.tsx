@@ -524,7 +524,7 @@ const App: React.FC = () => {
           )}
 
           {/* Current word display */}
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nuværende ord</p>
             <motion.div
               className="text-2xl sm:text-3xl font-bold h-12 flex items-center justify-center bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl shadow-inner px-6 border border-gray-100"
@@ -555,49 +555,9 @@ const App: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {/* Score and stats */}
-          <div className="mt-5 flex justify-between items-center px-2 py-3 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl">
-            <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-indigo-400" />
-              <span className="text-gray-600 font-medium">Score:</span>
-              <motion.span
-                key={gameState.score}
-                initial={{ scale: 1.3, color: "#22c55e" }}
-                animate={{ scale: 1, color: "#4f46e5" }}
-                className="font-bold text-2xl"
-              >
-                {gameState.score}
-              </motion.span>
-            </div>
-            {personalBest > 0 && (
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                <Trophy size={14} className="text-yellow-500" />
-                <span>Rekord:</span>
-                <span className="font-semibold text-indigo-500">{personalBest}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Found words */}
-          {gameState.foundWords.length > 0 && (
-            <div className="mt-3 px-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fundne ord ({gameState.foundWords.length})</p>
-              <div className="text-xs text-gray-600 flex flex-wrap gap-1">
-                {gameState.foundWords.slice(-8).map((word, i) => (
-                  <span key={i} className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full border border-green-100">
-                    {word}
-                  </span>
-                ))}
-                {gameState.foundWords.length > 8 && (
-                  <span className="px-2 py-0.5 text-gray-400">+{gameState.foundWords.length - 8} mere</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Action buttons */}
+          {/* Action buttons - placed right after current word for mobile visibility */}
           {!gameState.isGameOver && (
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -624,6 +584,46 @@ const App: React.FC = () => {
                 <Send size={18} />
                 Indsend
               </motion.button>
+            </div>
+          )}
+
+          {/* Score and stats */}
+          <div className="mt-4 flex justify-between items-center px-2 py-2 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-indigo-400" />
+              <span className="text-gray-600 font-medium text-sm">Score:</span>
+              <motion.span
+                key={gameState.score}
+                initial={{ scale: 1.3, color: "#22c55e" }}
+                animate={{ scale: 1, color: "#4f46e5" }}
+                className="font-bold text-xl"
+              >
+                {gameState.score}
+              </motion.span>
+            </div>
+            {personalBest > 0 && (
+              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <Trophy size={14} className="text-yellow-500" />
+                <span>Rekord:</span>
+                <span className="font-semibold text-indigo-500">{personalBest}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Found words - at bottom, scrollable if needed */}
+          {gameState.foundWords.length > 0 && (
+            <div className="mt-3 px-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fundne ord ({gameState.foundWords.length})</p>
+              <div className="text-xs text-gray-600 flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+                {gameState.foundWords.slice(-8).map((word, i) => (
+                  <span key={i} className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full border border-green-100">
+                    {word}
+                  </span>
+                ))}
+                {gameState.foundWords.length > 8 && (
+                  <span className="px-2 py-0.5 text-gray-400">+{gameState.foundWords.length - 8} mere</span>
+                )}
+              </div>
             </div>
           )}
         </main>
