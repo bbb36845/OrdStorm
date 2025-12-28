@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Session } from "@supabase/supabase-js";
 import { supabase } from "./SupabaseClient";
 import GameBoard from "./components/Game/GameBoard";
 import HowToPlayModal from "./components/Game/HowToPlayModal";
-import AuthForm from "./components/Auth/AuthForm";
+import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
 import { useConfetti } from "./components/Game/Confetti";
-import { GameState, Letter, User, Profile } from "./types";
+import { GameState, Letter } from "./types";
 import {
   initializeGameState,
   handleLetterClick as logicHandleLetterClick,
@@ -17,8 +16,6 @@ import {
 } from "./components/Game/GameLogic";
 import {
   Info,
-  LogIn,
-  LogOut,
   Repeat,
   Send,
   Trash2,
@@ -28,38 +25,31 @@ import {
   Upload,
   X,
   Sparkles,
-  Zap
+  Zap,
+  User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface LocalScore {
-  score: number;
-  wordsFound: string[];
-  longestWord: string | null;
-  timestamp: number;
-}
+const STORAGE_KEY_USERNAME = "ordstorm_username";
+const STORAGE_KEY_USER_ID = "ordstorm_user_id";
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(() => initializeGameState(6, 6));
   const [isHowToPlayModalOpen, setIsHowToPlayModalOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isRegisterMode, setIsRegisterMode] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(false);
+  const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
 
   // Confetti effects
   const { celebrateWord, celebrateLongWord, celebrateGameOver } = useConfetti();
-  const prevScoreRef = useRef(0);
   const prevFoundWordsRef = useRef<string[]>([]);
 
-  // Supabase Auth State
-  const [_session, setSession] = useState<Session | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  // Simple user state - just username and ID stored in localStorage
+  const [username, setUsername] = useState<string | null>(null);
+  const [anonUserId, setAnonUserId] = useState<string | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-  // Local scores for guest users
-  const [localScores, setLocalScores] = useState<LocalScore[]>([]);
+  // Personal best score
   const [personalBest, setPersonalBest] = useState<number>(0);
 
   // State for prompting save after game
@@ -68,7 +58,6 @@ const App: React.FC = () => {
     wordsFound: string[];
     longestWord: string | null;
   } | null>(null);
-  const [_isSavingScore, setIsSavingScore] = useState(false);
   const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
 
   // Track score changes for confetti
@@ -84,8 +73,7 @@ const App: React.FC = () => {
       }
     }
     prevFoundWordsRef.current = gameState.foundWords;
-    prevScoreRef.current = gameState.score;
-  }, [gameState.foundWords, gameState.score, celebrateWord, celebrateLongWord]);
+  }, [gameState.foundWords, celebrateWord, celebrateLongWord]);
 
   // Celebrate game over
   useEffect(() => {
@@ -96,82 +84,38 @@ const App: React.FC = () => {
     }
   }, [gameState.isGameOver, gameState.score, celebrateGameOver]);
 
-  // Initialize Supabase Auth listener
+  // Load saved username and user ID from localStorage
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        setCurrentUser({
-          id: session.user.id,
-          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'Spiller',
-          email: session.user.email
-        });
-        fetchProfile(session.user.id);
-      }
-      setIsLoadingAuth(false);
-    });
+    const savedUsername = localStorage.getItem(STORAGE_KEY_USERNAME);
+    const savedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        setCurrentUser({
-          id: session.user.id,
-          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'Spiller',
-          email: session.user.email
-        });
-        fetchProfile(session.user.id);
-      } else {
-        setCurrentUser(null);
-        setProfile(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    if (savedUsername && savedUserId) {
+      setUsername(savedUsername);
+      setAnonUserId(savedUserId);
+      // Fetch personal best for this user
+      fetchPersonalBest(savedUserId);
+    }
+    setIsLoadingUser(false);
   }, []);
 
-  // Fetch user profile from Supabase
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+  // Fetch personal best score from Supabase
+  const fetchPersonalBest = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('scores')
+        .select('score')
+        .eq('user_id', userId)
+        .order('score', { ascending: false })
+        .limit(1)
+        .single();
 
-    if (error) {
-      console.error('Error fetching profile:', error);
-    } else if (data) {
-      setProfile(data as Profile);
-      setPersonalBest(data.highest_score || 0);
+      if (!error && data) {
+        setPersonalBest(data.score);
+      }
+    } catch (err) {
+      console.error('Error fetching personal best:', err);
     }
   };
-
-  // Load local scores from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("ordstorm_local_scores");
-    if (stored) {
-      const scores = JSON.parse(stored) as LocalScore[];
-      setLocalScores(scores);
-      if (!currentUser && scores.length > 0) {
-        setPersonalBest(Math.max(...scores.map(s => s.score)));
-      }
-    }
-  }, [currentUser]);
-
-  // Save local scores to localStorage
-  useEffect(() => {
-    if (localScores.length > 0) {
-      localStorage.setItem("ordstorm_local_scores", JSON.stringify(localScores));
-    }
-  }, [localScores]);
-
-  // Update personal best when profile changes
-  useEffect(() => {
-    if (profile) {
-      setPersonalBest(profile.highest_score || 0);
-    }
-  }, [profile]);
 
   // Initialize word validation (now instant - server-side via Supabase RPC)
   useEffect(() => {
@@ -184,40 +128,37 @@ const App: React.FC = () => {
     if (gameState.isGameOver && gameState.score > 0) {
       const longestWord = gameState.foundWords.reduce((a, b) => a.length >= b.length ? a : b, '');
 
-      if (currentUser) {
-        // Logged in - save to Supabase automatically
-        saveScoreToSupabase(gameState.score, gameState.foundWords, longestWord);
+      if (username && anonUserId) {
+        // User has username - save to Supabase automatically
+        saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord);
       } else {
-        // Guest - save locally and prompt for account
-        const newLocalScore: LocalScore = {
-          score: gameState.score,
-          wordsFound: gameState.foundWords,
-          longestWord: longestWord || null,
-          timestamp: Date.now()
-        };
-        setLocalScores(prev => [...prev, newLocalScore].sort((a, b) => b.score - a.score).slice(0, 10));
-        setPersonalBest(prev => Math.max(prev, gameState.score));
-
-        // Prompt to save to leaderboard
+        // No username yet - prompt for one
         setScoreToSave({
           score: gameState.score,
           wordsFound: gameState.foundWords,
           longestWord: longestWord || null
         });
       }
+
+      // Update personal best locally
+      if (gameState.score > personalBest) {
+        setPersonalBest(gameState.score);
+      }
     }
-  }, [gameState.isGameOver, gameState.score, currentUser]);
+  }, [gameState.isGameOver]);
 
   // Save score to Supabase
-  const saveScoreToSupabase = async (score: number, wordsFound: string[], longestWord: string | null) => {
-    if (!currentUser) return;
-
-    setIsSavingScore(true);
+  const saveScoreToSupabase = async (
+    userId: string,
+    score: number,
+    wordsFound: string[],
+    longestWord: string | null
+  ) => {
     try {
       const { error } = await supabase
         .from('scores')
         .insert({
-          user_id: currentUser.id,
+          user_id: userId,
           score,
           words_found: wordsFound,
           word_count: wordsFound.length,
@@ -229,87 +170,80 @@ const App: React.FC = () => {
       if (error) {
         console.error('Error saving score:', error);
       } else {
-        // Refresh profile to get updated stats
-        fetchProfile(currentUser.id);
         // Refresh leaderboard to show new score
         setLeaderboardRefreshKey(prev => prev + 1);
       }
     } catch (err) {
       console.error('Error saving score:', err);
-    } finally {
-      setIsSavingScore(false);
     }
   };
 
-  // Auth handlers
-  const handleAuthSubmit = async (credentials: { email: string; password: string; username?: string }) => {
-    setAuthLoading(true);
-    setAuthError(null);
+  // Handle username submission - creates anonymous user and saves score
+  const handleUsernameSubmit = async (newUsername: string) => {
+    setIsSavingUsername(true);
+    setUsernameError(null);
 
     try {
-      if (isRegisterMode) {
-        // Sign up
-        const { data, error } = await supabase.auth.signUp({
-          email: credentials.email,
-          password: credentials.password,
-          options: {
-            data: {
-              username: credentials.username,
-              display_name: credentials.username
-            }
-          }
-        });
+      // Sign in anonymously to get a user ID
+      const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
 
-        if (error) {
-          if (error.message.includes('already registered')) {
-            setAuthError('Denne email er allerede registreret. Prøv at logge ind.');
-          } else {
-            setAuthError(error.message);
-          }
-        } else if (data.user) {
-          setIsAuthModalOpen(false);
-          // If there's a score to save, save it now
-          if (scoreToSave) {
-            setTimeout(() => {
-              saveScoreToSupabase(scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord);
-              setScoreToSave(null);
-            }, 1000);
-          }
-        }
-      } else {
-        // Sign in
-        const { error } = await supabase.auth.signInWithPassword({
-          email: credentials.email,
-          password: credentials.password
-        });
-
-        if (error) {
-          if (error.message.includes('Invalid login')) {
-            setAuthError('Forkert email eller adgangskode');
-          } else {
-            setAuthError(error.message);
-          }
-        } else {
-          setIsAuthModalOpen(false);
-          if (scoreToSave) {
-            setTimeout(() => {
-              saveScoreToSupabase(scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord);
-              setScoreToSave(null);
-            }, 1000);
-          }
-        }
+      if (authError) {
+        console.error('Auth error:', authError);
+        setUsernameError('Kunne ikke oprette bruger. Prøv igen.');
+        setIsSavingUsername(false);
+        return;
       }
-    } catch (err) {
-      setAuthError('Der opstod en fejl. Prøv igen.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setCurrentUser(null);
-    setProfile(null);
+      const userId = authData.user?.id;
+      if (!userId) {
+        setUsernameError('Kunne ikke oprette bruger. Prøv igen.');
+        setIsSavingUsername(false);
+        return;
+      }
+
+      // Create profile with username
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId,
+          username: newUsername,
+          display_name: newUsername
+        });
+
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        // Check if username is taken
+        if (profileError.message.includes('duplicate') || profileError.message.includes('unique')) {
+          setUsernameError('Dette brugernavn er allerede taget. Prøv et andet.');
+          setIsSavingUsername(false);
+          return;
+        }
+        setUsernameError('Kunne ikke gemme brugernavn. Prøv igen.');
+        setIsSavingUsername(false);
+        return;
+      }
+
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY_USERNAME, newUsername);
+      localStorage.setItem(STORAGE_KEY_USER_ID, userId);
+
+      // Update state
+      setUsername(newUsername);
+      setAnonUserId(userId);
+
+      // Save the pending score if there is one
+      if (scoreToSave) {
+        await saveScoreToSupabase(userId, scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord);
+        setScoreToSave(null);
+      }
+
+      setIsUsernameModalOpen(false);
+    } catch (err) {
+      console.error('Error creating user:', err);
+      setUsernameError('Der opstod en fejl. Prøv igen.');
+    } finally {
+      setIsSavingUsername(false);
+    }
   };
 
   // Game handlers
@@ -342,7 +276,7 @@ const App: React.FC = () => {
 
   const handleRestartGame = useCallback(() => {
     setGameState(initializeGameState(6, 6));
-    setGameState(prev => ({ ...prev, isWordListLoading: false, wordListErrorMessage: prev.wordListErrorMessage }));
+    setGameState(prev => ({ ...prev, isWordListLoading: false }));
     setScoreToSave(null);
   }, []);
 
@@ -361,7 +295,7 @@ const App: React.FC = () => {
   }, [gameState.isGameOver, gameState.isWordListLoading]);
 
   // Loading state
-  if (isLoadingAuth) {
+  if (isLoadingUser) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen animated-gradient-bg">
         <motion.div
@@ -404,6 +338,7 @@ const App: React.FC = () => {
           className="absolute bottom-40 left-1/4 w-40 h-40 bg-indigo-300/15 rounded-full blur-2xl"
         />
       </div>
+
       {/* Header */}
       <header className="w-full max-w-4xl mb-6 flex justify-between items-center relative z-10">
         <motion.div
@@ -427,29 +362,11 @@ const App: React.FC = () => {
           animate={{ opacity: 1, x: 0 }}
           className="flex items-center gap-2 sm:gap-3"
         >
-          {currentUser ? (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="hidden sm:inline text-sm text-white/90 font-medium drop-shadow">
-                {currentUser.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-2 glass-card hover:bg-white/90
-                  text-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all text-sm font-medium btn-premium"
-              >
-                <LogOut size={16} />
-                <span className="hidden sm:inline">Log ud</span>
-              </button>
+          {username && (
+            <div className="flex items-center gap-2 px-3 py-2 glass-card rounded-xl">
+              <User size={16} className="text-indigo-600" />
+              <span className="text-sm text-gray-700 font-medium">{username}</span>
             </div>
-          ) : (
-            <button
-              onClick={() => { setIsAuthModalOpen(true); setIsRegisterMode(false); setAuthError(null); }}
-              className="flex items-center gap-1.5 px-3 py-2 glass-card hover:bg-white/90
-                text-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all text-sm font-medium btn-premium"
-            >
-              <LogIn size={16} />
-              <span className="hidden sm:inline">Log ind</span>
-            </button>
           )}
 
           <button
@@ -546,7 +463,7 @@ const App: React.FC = () => {
                 {gameState.score} point
               </motion.p>
 
-              {currentUser && (
+              {personalBest > 0 && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -557,8 +474,8 @@ const App: React.FC = () => {
                 </motion.p>
               )}
 
-              {/* Save to leaderboard prompt for guests */}
-              {!currentUser && scoreToSave && (
+              {/* Save to leaderboard prompt - only show if no username yet */}
+              {!username && scoreToSave && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -567,15 +484,27 @@ const App: React.FC = () => {
                 >
                   <p className="text-sm text-gray-600 mb-3">Gem din score på leaderboardet?</p>
                   <button
-                    onClick={() => { setIsAuthModalOpen(true); setIsRegisterMode(true); setAuthError(null); }}
+                    onClick={() => { setIsUsernameModalOpen(true); setUsernameError(null); }}
                     className="flex items-center justify-center gap-2 px-5 py-2.5 mx-auto
-                      bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700
+                      bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700
                       text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all btn-premium"
                   >
                     <Upload size={18} />
                     Gem Score
                   </button>
                 </motion.div>
+              )}
+
+              {/* Score saved confirmation */}
+              {username && !scoreToSave && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="text-sm text-green-600 mt-3 relative z-10 font-medium"
+                >
+                  Score gemt!
+                </motion.p>
               )}
 
               <motion.button
@@ -706,7 +635,7 @@ const App: React.FC = () => {
           transition={{ delay: 0.3 }}
           className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-2/5"
         >
-          <Leaderboard key={leaderboardRefreshKey} currentUserId={currentUser?.id || null} />
+          <Leaderboard key={leaderboardRefreshKey} currentUserId={anonUserId} />
         </motion.aside>
       </div>
 
@@ -725,15 +654,15 @@ const App: React.FC = () => {
       {/* How to Play Modal */}
       <HowToPlayModal isOpen={isHowToPlayModalOpen} onClose={() => setIsHowToPlayModalOpen(false)} />
 
-      {/* Auth Modal */}
+      {/* Username Modal */}
       <AnimatePresence>
-        {isAuthModalOpen && (
+        {isUsernameModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={() => setIsAuthModalOpen(false)}
+            onClick={() => setIsUsernameModalOpen(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -743,28 +672,21 @@ const App: React.FC = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                onClick={() => setIsAuthModalOpen(false)}
+                onClick={() => setIsUsernameModalOpen(false)}
                 className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X size={20} />
               </button>
 
-              <h2 className="text-2xl font-bold mb-2 text-gray-800">
-                {isRegisterMode ? "Opret konto" : "Log ind"}
+              <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">
+                Gem din score
               </h2>
 
-              {scoreToSave && (
-                <p className="text-sm text-gray-500 mb-6">
-                  Opret en konto for at gemme din score på {scoreToSave.score} point!
-                </p>
-              )}
-
-              <AuthForm
-                isRegister={isRegisterMode}
-                onSubmit={handleAuthSubmit}
-                onToggleMode={() => { setIsRegisterMode(!isRegisterMode); setAuthError(null); }}
-                errorMessage={authError}
-                isLoading={authLoading}
+              <UsernameForm
+                onSubmit={handleUsernameSubmit}
+                isLoading={isSavingUsername}
+                errorMessage={usernameError}
+                score={scoreToSave?.score}
               />
             </motion.div>
           </motion.div>
