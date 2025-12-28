@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "./SupabaseClient";
 import GameBoard from "./components/Game/GameBoard";
 import HowToPlayModal from "./components/Game/HowToPlayModal";
@@ -6,6 +7,8 @@ import WildCardPicker from "./components/Game/WildCardPicker";
 import PowerUpBar from "./components/Game/PowerUpBar";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
+import LanguageSelector from "./components/LanguageSelector";
+import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import { useConfetti } from "./components/Game/Confetti";
 import { GameState, Letter, PowerUpType } from "./types";
 import {
@@ -45,7 +48,10 @@ import { motion, AnimatePresence } from "framer-motion";
 const STORAGE_KEY_USERNAME = "letsword_username";
 const STORAGE_KEY_USER_ID = "letsword_user_id";
 
-const App: React.FC = () => {
+// Inner component that uses the language context
+const AppContent: React.FC = () => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [gameState, setGameState] = useState<GameState>(() => initializeGameState(6, 6));
   const [isHowToPlayModalOpen, setIsHowToPlayModalOpen] = useState(false);
   const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
@@ -165,7 +171,7 @@ const App: React.FC = () => {
 
       if (username && anonUserId) {
         // User has username - save to Supabase automatically
-        saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord);
+        saveScoreToSupabase(anonUserId, gameState.score, gameState.foundWords, longestWord, language);
       } else {
         // No username yet - prompt for one
         setScoreToSave({
@@ -187,7 +193,8 @@ const App: React.FC = () => {
     userId: string,
     score: number,
     wordsFound: string[],
-    longestWord: string | null
+    longestWord: string | null,
+    lang: 'da' | 'en' = 'da'
   ) => {
     try {
       const { error } = await supabase
@@ -199,7 +206,8 @@ const App: React.FC = () => {
           word_count: wordsFound.length,
           longest_word: longestWord,
           game_mode: 'endless',
-          difficulty: 'medium'
+          difficulty: 'medium',
+          language: lang
         });
 
       if (error) {
@@ -268,7 +276,7 @@ const App: React.FC = () => {
 
       // Save the pending score if there is one
       if (scoreToSave) {
-        await saveScoreToSupabase(userId, scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord);
+        await saveScoreToSupabase(userId, scoreToSave.score, scoreToSave.wordsFound, scoreToSave.longestWord, language);
         setScoreToSave(null);
       }
 
@@ -368,13 +376,20 @@ const App: React.FC = () => {
     if (gameState.isGameOver || gameState.isLoading || gameState.isWordListLoading || currentWordString.length < 3) return;
     setGameState((prevState) => ({ ...prevState, isLoading: true, errorMessage: null }));
     try {
-      const newState = await logicSubmitWord(gameState);
+      const newState = await logicSubmitWord(gameState, {
+        language,
+        errorMessages: {
+          tooShort: t('validation.tooShort'),
+          wildcardFirst: t('validation.wildcardFirst'),
+          invalidWord: (word: string) => t('validation.invalidWord', { word }),
+        }
+      });
       setGameState({ ...newState, isLoading: false });
     } catch (error) {
       console.error("Error submitting word:", error);
-      setGameState((prevState) => ({ ...prevState, isLoading: false, errorMessage: "Fejl ved validering af ord." }));
+      setGameState((prevState) => ({ ...prevState, isLoading: false, errorMessage: t('validation.genericError', 'Error validating word.') }));
     }
-  }, [gameState, currentWordString.length]);
+  }, [gameState, currentWordString.length, language, t]);
 
   const handleRestartGame = useCallback(() => {
     setGameState(initializeGameState(6, 6));
@@ -436,10 +451,10 @@ const App: React.FC = () => {
             transition={{ duration: 2, repeat: Infinity }}
             className="text-5xl font-extrabold text-white mb-6 drop-shadow-lg"
           >
-            LetsWord
+            {t('app.title')}
           </motion.h1>
           <Loader2 size={48} className="animate-spin text-white/90 mx-auto" />
-          <p className="mt-4 text-white/80 text-sm">Indlæser spil...</p>
+          <p className="mt-4 text-white/80 text-sm">{t('app.loading')}</p>
         </motion.div>
       </div>
     );
@@ -480,7 +495,7 @@ const App: React.FC = () => {
             <Zap className="w-8 h-8 text-yellow-300 drop-shadow-lg" />
           </motion.div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
-            LetsWord
+            {t('app.title')}
           </h1>
         </motion.div>
 
@@ -496,13 +511,15 @@ const App: React.FC = () => {
             </div>
           )}
 
+          <LanguageSelector compact />
+
           <button
             onClick={() => setIsHowToPlayModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2 glass-card hover:bg-white/90
               text-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all text-sm font-medium btn-premium"
           >
             <Info size={16} />
-            <span className="hidden sm:inline">Sådan spiller du</span>
+            <span className="hidden sm:inline">{t('howToPlay.button')}</span>
           </button>
         </motion.div>
       </header>
@@ -521,7 +538,7 @@ const App: React.FC = () => {
                 className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-20 rounded-2xl"
               >
                 <Loader2 size={40} className="animate-spin text-sky-500" />
-                <p className="mt-3 text-sky-600 font-medium">Validerer ord...</p>
+                <p className="mt-3 text-sky-600 font-medium">{t('leaderboard.loading')}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -543,7 +560,7 @@ const App: React.FC = () => {
               className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-full shadow-lg"
             >
               <Snowflake size={16} className="animate-spin" />
-              <span className="text-sm font-semibold">Frosset!</span>
+              <span className="text-sm font-semibold">{t('game.frozen')}</span>
             </motion.div>
           )}
 
@@ -555,7 +572,7 @@ const App: React.FC = () => {
               className="absolute top-2 right-2 z-30 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg"
             >
               <Flame size={14} />
-              <span className="text-sm font-bold">{gameState.wordStreak}x Streak!</span>
+              <span className="text-sm font-bold">{t('game.streak', { count: gameState.wordStreak })}</span>
             </motion.div>
           )}
 
@@ -620,7 +637,7 @@ const App: React.FC = () => {
                 transition={{ delay: 0.4 }}
                 className="text-2xl font-bold text-gray-800 mt-3 relative z-10"
               >
-                Spillet er slut!
+                {t('gameOver.title')}
               </motion.p>
 
               <motion.p
@@ -629,7 +646,7 @@ const App: React.FC = () => {
                 transition={{ delay: 0.6, type: "spring", stiffness: 300 }}
                 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mt-2 relative z-10"
               >
-                {gameState.score} point
+                {t('gameOver.points', { score: gameState.score })}
               </motion.p>
 
               {personalBest > 0 && (
@@ -639,7 +656,7 @@ const App: React.FC = () => {
                   transition={{ delay: 0.8 }}
                   className="text-sm text-gray-500 mt-2 relative z-10"
                 >
-                  Personlig rekord: <span className="font-semibold text-indigo-500">{personalBest}</span>
+                  {t('gameOver.personalBest', { score: personalBest })}
                 </motion.p>
               )}
 
@@ -651,7 +668,7 @@ const App: React.FC = () => {
                   transition={{ delay: 0.8 }}
                   className="mt-4 text-center relative z-10"
                 >
-                  <p className="text-sm text-gray-600 mb-3">Gem din score på leaderboardet?</p>
+                  <p className="text-sm text-gray-600 mb-3">{t('gameOver.savePrompt')}</p>
                   <button
                     onClick={() => { setIsUsernameModalOpen(true); setUsernameError(null); }}
                     className="flex items-center justify-center gap-2 px-5 py-2.5 mx-auto
@@ -659,7 +676,7 @@ const App: React.FC = () => {
                       text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all btn-premium"
                   >
                     <Upload size={18} />
-                    Gem Score
+                    {t('gameOver.saveScore')}
                   </button>
                 </motion.div>
               )}
@@ -672,7 +689,7 @@ const App: React.FC = () => {
                   transition={{ delay: 1 }}
                   className="text-sm text-green-600 mt-3 relative z-10 font-medium"
                 >
-                  Score gemt!
+                  {t('gameOver.scoreSaved')}
                 </motion.p>
               )}
 
@@ -687,14 +704,14 @@ const App: React.FC = () => {
                   text-gray-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all relative z-10"
               >
                 <Repeat size={18} />
-                Spil igen
+                {t('gameOver.playAgain')}
               </motion.button>
             </motion.div>
           )}
 
           {/* Current word display */}
           <div className="mt-4 text-center">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nuværende ord</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('game.currentWord')}</p>
             <motion.div
               className="text-2xl sm:text-3xl font-bold h-12 flex items-center justify-center bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl shadow-inner px-6 border border-gray-100"
               animate={currentWordString.length >= 3 ? { scale: [1, 1.02, 1] } : {}}
@@ -705,7 +722,7 @@ const App: React.FC = () => {
                   {currentWordString}
                 </span>
               ) : (
-                <span className="text-gray-300 text-lg font-normal">Vælg bogstaver...</span>
+                <span className="text-gray-300 text-lg font-normal">{t('game.selectLetters')}</span>
               )}
             </motion.div>
           </div>
@@ -738,7 +755,7 @@ const App: React.FC = () => {
                   transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Trash2 size={18} />
-                Ryd
+                {t('game.clear')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -751,7 +768,7 @@ const App: React.FC = () => {
                   transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500 btn-premium"
               >
                 <Send size={18} />
-                Indsend
+                {t('game.submit')}
               </motion.button>
             </div>
           )}
@@ -760,7 +777,7 @@ const App: React.FC = () => {
           <div className="mt-4 flex justify-between items-center px-2 py-2 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl">
             <div className="flex items-center gap-2">
               <Sparkles size={16} className="text-indigo-400" />
-              <span className="text-gray-600 font-medium text-sm">Score:</span>
+              <span className="text-gray-600 font-medium text-sm">{t('game.score')}:</span>
               <motion.span
                 key={gameState.score}
                 initial={{ scale: 1.3, color: "#22c55e" }}
@@ -773,7 +790,7 @@ const App: React.FC = () => {
             {personalBest > 0 && (
               <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <Trophy size={14} className="text-yellow-500" />
-                <span>Rekord:</span>
+                <span>{t('game.personalBest')}:</span>
                 <span className="font-semibold text-indigo-500">{personalBest}</span>
               </div>
             )}
@@ -782,7 +799,7 @@ const App: React.FC = () => {
           {/* Found words - at bottom, scrollable if needed */}
           {gameState.foundWords.length > 0 && (
             <div className="mt-3 px-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fundne ord ({gameState.foundWords.length})</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{t('game.wordsFound')} ({gameState.foundWords.length})</p>
               <div className="text-xs text-gray-600 flex flex-wrap gap-1 max-h-16 overflow-y-auto">
                 {gameState.foundWords.slice(-8).map((word, i) => (
                   <span key={i} className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full border border-green-100">
@@ -790,7 +807,7 @@ const App: React.FC = () => {
                   </span>
                 ))}
                 {gameState.foundWords.length > 8 && (
-                  <span className="px-2 py-0.5 text-gray-400">+{gameState.foundWords.length - 8} mere</span>
+                  <span className="px-2 py-0.5 text-gray-400">+{gameState.foundWords.length - 8}</span>
                 )}
               </div>
             </div>
@@ -804,7 +821,7 @@ const App: React.FC = () => {
           transition={{ delay: 0.3 }}
           className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-2/5"
         >
-          <Leaderboard key={leaderboardRefreshKey} currentUserId={anonUserId} />
+          <Leaderboard key={`${leaderboardRefreshKey}-${language}`} currentUserId={anonUserId} language={language} />
         </motion.aside>
       </div>
 
@@ -816,7 +833,7 @@ const App: React.FC = () => {
         className="mt-8 text-center relative z-10"
       >
         <p className="text-white/60 text-xs font-medium">
-          &copy; 2025 Mark Jensen &middot; <span className="text-white/80">LetsWord</span>
+          {t('app.footer')}
         </p>
       </motion.footer>
 
@@ -859,7 +876,7 @@ const App: React.FC = () => {
               </button>
 
               <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">
-                Gem din score
+                {t('auth.saveYourScore')}
               </h2>
 
               <UsernameForm
@@ -873,6 +890,15 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
     </div>
+  );
+};
+
+// Main App component wrapped with LanguageProvider
+const App: React.FC = () => {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 };
 

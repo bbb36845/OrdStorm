@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "LetsWord",
+    "subtitle": "Word Game",
+    "loading": "Loading game...",
+    "footer": "© 2025 Mark Jensen"
+  },
+  "game": {
+    "currentWord": "Current word",
+    "selectLetters": "Select letters...",
+    "clear": "Clear",
+    "submit": "Submit",
+    "score": "Score",
+    "personalBest": "Personal best",
+    "wordsFound": "Words found",
+    "noWordsYet": "No words yet",
+    "frozen": "Frozen!",
+    "streak": "{{count}}x Streak!"
+  },
+  "gameOver": {
+    "title": "Game Over!",
+    "points": "{{score}} points",
+    "personalBest": "Personal best: {{score}}",
+    "savePrompt": "Save your score to the leaderboard?",
+    "saveScore": "Save Score",
+    "scoreSaved": "Score saved!",
+    "playAgain": "Play Again"
+  },
+  "validation": {
+    "tooShort": "Word must be at least 3 letters long.",
+    "wildcardFirst": "Choose a letter for the wildcard first.",
+    "invalidWord": "\"{{word}}\" is not a valid English word."
+  },
+  "powerUps": {
+    "nuke": "Nuke",
+    "nukeDesc": "Clear entire board",
+    "shuffle": "Shuffle",
+    "shuffleDesc": "Rearrange all letters",
+    "timeFreeze": "Freeze",
+    "timeFreezeDesc": "Stop new letters for 10 sec",
+    "earnHint": "Earn power-ups with long words and streaks"
+  },
+  "howToPlay": {
+    "title": "How to Play",
+    "button": "How to Play",
+    "close": "Close",
+    "goal": "Goal",
+    "goalText": "Form words from letters on the board before it fills up!",
+    "rules": "Rules",
+    "rule1": "Click letters to form a word",
+    "rule2": "Words must be at least 3 letters",
+    "rule3": "Submit valid English words for points",
+    "rule4": "Game ends when the board is full",
+    "specialLetters": "Special Letters",
+    "bonus2x": "2x point multiplier",
+    "bonus3x": "3x point multiplier",
+    "bomb": "Clears 3x3 area",
+    "wild": "Can be any letter",
+    "ice": "Freezes letter spawn for 5 sec",
+    "chain": "Clears adjacent letters",
+    "tickingBomb": "Explodes if not used in time"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "daily": "Today",
+    "allTime": "All-time",
+    "loading": "Loading...",
+    "empty": "No scores yet",
+    "points": "points",
+    "words": "words"
+  },
+  "auth": {
+    "saveYourScore": "Save your score",
+    "enterUsername": "Choose a username",
+    "usernamePlaceholder": "Your username",
+    "saving": "Saving...",
+    "save": "Save",
+    "usernameRequired": "Username is required",
+    "usernameTooShort": "Username must be at least 2 characters",
+    "usernameTaken": "This username is already taken",
+    "genericError": "An error occurred. Please try again.",
+    "yourScore": "Your score: {{score}} points"
+  },
+  "wildcard": {
+    "title": "Choose Letter",
+    "subtitle": "What should the wildcard be?"
+  },
+  "language": {
+    "select": "Language",
+    "da": "Dansk",
+    "en": "English"
+  }
+}

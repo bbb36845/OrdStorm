@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bomb, Shuffle, Timer } from 'lucide-react';
 import { PowerUps, PowerUpType } from '../../types';
@@ -11,36 +12,6 @@ interface PowerUpBarProps {
   onPendingDismiss: () => void;
 }
 
-const POWER_UP_CONFIG = {
-  nuke: {
-    icon: Bomb,
-    label: 'Nuke',
-    description: 'Ryd hele brættet',
-    color: 'from-red-500 to-orange-500',
-    bgColor: 'bg-red-500/20',
-    borderColor: 'border-red-500/50',
-    textColor: 'text-red-400',
-  },
-  shuffle: {
-    icon: Shuffle,
-    label: 'Bland',
-    description: 'Omrokér alle bogstaver',
-    color: 'from-purple-500 to-pink-500',
-    bgColor: 'bg-purple-500/20',
-    borderColor: 'border-purple-500/50',
-    textColor: 'text-purple-400',
-  },
-  timeFreeze: {
-    icon: Timer,
-    label: 'Frys',
-    description: 'Stop nye bogstaver i 10 sek',
-    color: 'from-cyan-500 to-blue-500',
-    bgColor: 'bg-cyan-500/20',
-    borderColor: 'border-cyan-500/50',
-    textColor: 'text-cyan-400',
-  },
-};
-
 const PowerUpBar: React.FC<PowerUpBarProps> = ({
   powerUps,
   onActivate,
@@ -48,6 +19,38 @@ const PowerUpBar: React.FC<PowerUpBarProps> = ({
   pendingPowerUp,
   onPendingDismiss,
 }) => {
+  const { t } = useTranslation();
+
+  const POWER_UP_CONFIG = {
+    nuke: {
+      icon: Bomb,
+      label: t('powerUps.nuke'),
+      description: t('powerUps.nukeDesc'),
+      color: 'from-red-500 to-orange-500',
+      bgColor: 'bg-red-500/20',
+      borderColor: 'border-red-500/50',
+      textColor: 'text-red-400',
+    },
+    shuffle: {
+      icon: Shuffle,
+      label: t('powerUps.shuffle'),
+      description: t('powerUps.shuffleDesc'),
+      color: 'from-purple-500 to-pink-500',
+      bgColor: 'bg-purple-500/20',
+      borderColor: 'border-purple-500/50',
+      textColor: 'text-purple-400',
+    },
+    timeFreeze: {
+      icon: Timer,
+      label: t('powerUps.timeFreeze'),
+      description: t('powerUps.timeFreezeDesc'),
+      color: 'from-cyan-500 to-blue-500',
+      bgColor: 'bg-cyan-500/20',
+      borderColor: 'border-cyan-500/50',
+      textColor: 'text-cyan-400',
+    },
+  };
+
   const powerUpTypes: PowerUpType[] = ['nuke', 'shuffle', 'timeFreeze'];
 
   return (
@@ -125,7 +128,7 @@ const PowerUpBar: React.FC<PowerUpBarProps> = ({
 
       {/* How to earn hint */}
       <p className="text-center text-xs text-white/40 mt-2">
-        Tjen power-ups med lange ord og streaks
+        {t('powerUps.earnHint')}
       </p>
     </div>
   );

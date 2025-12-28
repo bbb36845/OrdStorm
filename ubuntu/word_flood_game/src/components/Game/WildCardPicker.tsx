@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface WildCardPickerProps {
   isOpen: boolean;
@@ -14,8 +16,19 @@ const DANISH_ALPHABET = [
   'U', 'V', 'W', 'X', 'Y', 'Z', 'Æ', 'Ø', 'Å'
 ];
 
+const ENGLISH_ALPHABET = [
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+  'U', 'V', 'W', 'X', 'Y', 'Z'
+];
+
 const WildCardPicker: React.FC<WildCardPickerProps> = ({ isOpen, onSelect, onCancel }) => {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+
   if (!isOpen) return null;
+
+  const alphabet = language === 'da' ? DANISH_ALPHABET : ENGLISH_ALPHABET;
 
   return (
     <AnimatePresence>
@@ -45,13 +58,13 @@ const WildCardPicker: React.FC<WildCardPickerProps> = ({ isOpen, onSelect, onCan
               <Sparkles size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-800">Vælg et bogstav</h2>
-              <p className="text-xs text-gray-500">Jokeren kan blive til et hvilket som helst bogstav</p>
+              <h2 className="text-lg font-bold text-gray-800">{t('wildcard.title')}</h2>
+              <p className="text-xs text-gray-500">{t('wildcard.subtitle')}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-7 gap-1.5">
-            {DANISH_ALPHABET.map((letter) => (
+            {alphabet.map((letter) => (
               <motion.button
                 key={letter}
                 whileHover={{ scale: 1.1 }}
@@ -67,10 +80,6 @@ const WildCardPicker: React.FC<WildCardPickerProps> = ({ isOpen, onSelect, onCan
               </motion.button>
             ))}
           </div>
-
-          <p className="text-xs text-gray-400 text-center mt-4">
-            Tryk på et bogstav for at bruge det i dit ord
-          </p>
         </motion.div>
       </motion.div>
     </AnimatePresence>

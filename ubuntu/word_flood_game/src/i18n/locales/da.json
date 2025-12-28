@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "LetsWord",
+    "subtitle": "Dansk Ordspil",
+    "loading": "Indlæser spil...",
+    "footer": "© 2025 Mark Jensen"
+  },
+  "game": {
+    "currentWord": "Nuværende ord",
+    "selectLetters": "Vælg bogstaver...",
+    "clear": "Ryd",
+    "submit": "Indsend",
+    "score": "Score",
+    "personalBest": "Personlig rekord",
+    "wordsFound": "Fundne ord",
+    "noWordsYet": "Ingen ord endnu",
+    "frozen": "Frosset!",
+    "streak": "{{count}}x Streak!"
+  },
+  "gameOver": {
+    "title": "Spillet er slut!",
+    "points": "{{score}} point",
+    "personalBest": "Personlig rekord: {{score}}",
+    "savePrompt": "Gem din score på leaderboardet?",
+    "saveScore": "Gem Score",
+    "scoreSaved": "Score gemt!",
+    "playAgain": "Spil igen"
+  },
+  "validation": {
+    "tooShort": "Ordet skal være mindst 3 bogstaver langt.",
+    "wildcardFirst": "Vælg et bogstav for jokeren først.",
+    "invalidWord": "\"{{word}}\" er ikke et gyldigt dansk ord."
+  },
+  "powerUps": {
+    "nuke": "Nuke",
+    "nukeDesc": "Ryd hele brættet",
+    "shuffle": "Bland",
+    "shuffleDesc": "Omrokér alle bogstaver",
+    "timeFreeze": "Frys",
+    "timeFreezeDesc": "Stop nye bogstaver i 10 sek",
+    "earnHint": "Tjen power-ups med lange ord og streaks"
+  },
+  "howToPlay": {
+    "title": "Sådan spiller du",
+    "button": "Sådan spiller du",
+    "close": "Luk",
+    "goal": "Mål",
+    "goalText": "Dan ord fra bogstaverne på brættet før det fyldes op!",
+    "rules": "Regler",
+    "rule1": "Klik på bogstaver for at danne et ord",
+    "rule2": "Ord skal være mindst 3 bogstaver",
+    "rule3": "Indsend gyldige danske ord for point",
+    "rule4": "Spillet slutter når brættet er fyldt",
+    "specialLetters": "Specielle bogstaver",
+    "bonus2x": "2x point multiplier",
+    "bonus3x": "3x point multiplier",
+    "bomb": "Rydder 3x3 område",
+    "wild": "Kan være ethvert bogstav",
+    "ice": "Fryser bogstavspawn i 5 sek",
+    "chain": "Rydder tilstødende bogstaver",
+    "tickingBomb": "Eksploderer hvis ikke brugt i tide"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "daily": "I dag",
+    "allTime": "All-time",
+    "loading": "Indlæser...",
+    "empty": "Ingen scores endnu",
+    "points": "point",
+    "words": "ord"
+  },
+  "auth": {
+    "saveYourScore": "Gem din score",
+    "enterUsername": "Vælg et brugernavn",
+    "usernamePlaceholder": "Dit brugernavn",
+    "saving": "Gemmer...",
+    "save": "Gem",
+    "usernameRequired": "Brugernavn er påkrævet",
+    "usernameTooShort": "Brugernavn skal være mindst 2 tegn",
+    "usernameTaken": "Dette brugernavn er allerede taget",
+    "genericError": "Der opstod en fejl. Prøv igen.",
+    "yourScore": "Din score: {{score}} point"
+  },
+  "wildcard": {
+    "title": "Vælg bogstav",
+    "subtitle": "Hvad skal jokeren være?"
+  },
+  "language": {
+    "select": "Sprog",
+    "da": "Dansk",
+    "en": "English"
+  }
+}

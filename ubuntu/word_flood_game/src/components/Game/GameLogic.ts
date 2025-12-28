@@ -262,12 +262,13 @@ const clearAdjacent = (board: Board, centerRow: number, centerCol: number, rows:
 };
 
 // Server-side word validation using Supabase RPC
-export const validateDanishWord = async (word: string): Promise<boolean> => {
+export const validateWord = async (word: string, language: 'da' | 'en' = 'da'): Promise<boolean> => {
   if (word.length < MIN_WORD_LENGTH) return false;
 
   try {
     const { data, error } = await supabase.rpc('validate_word', {
-      word_to_check: word.toLowerCase()
+      word_to_check: word.toLowerCase(),
+      lang: language
     });
 
     if (error) {
@@ -280,6 +281,11 @@ export const validateDanishWord = async (word: string): Promise<boolean> => {
     console.error("Error calling validate_word RPC:", err);
     return false;
   }
+};
+
+// Backward compatibility alias
+export const validateDanishWord = async (word: string): Promise<boolean> => {
+  return validateWord(word, 'da');
 };
 
 // Build the actual word string for validation (using wild card assignments)
@@ -317,14 +323,31 @@ export const assignWildCardLetter = (state: GameState, wildCardId: string, lette
   };
 };
 
-export const submitWord = async (state: GameState): Promise<GameState> => {
+export interface SubmitWordOptions {
+  language?: 'da' | 'en';
+  errorMessages?: {
+    tooShort: string;
+    wildcardFirst: string;
+    invalidWord: (word: string) => string;
+  };
+}
+
+const DEFAULT_ERROR_MESSAGES = {
+  tooShort: "Ordet skal være mindst 3 bogstaver langt.",
+  wildcardFirst: "Vælg et bogstav for jokeren først.",
+  invalidWord: (word: string) => `"${word}" er ikke et gyldigt dansk ord.`,
+};
+
+export const submitWord = async (state: GameState, options: SubmitWordOptions = {}): Promise<GameState> => {
+  const { language = 'da', errorMessages = DEFAULT_ERROR_MESSAGES } = options;
+
   if (state.currentWord.length < MIN_WORD_LENGTH) {
-    return { ...state, errorMessage: "Ordet skal være mindst 3 bogstaver langt.", currentWord: [] };
+    return { ...state, errorMessage: errorMessages.tooShort, currentWord: [] };
   }
 
   // Check if all wild cards have been assigned
   if (hasUnassignedWildCards(state.currentWord)) {
-    return { ...state, errorMessage: "Vælg et bogstav for jokeren først." };
+    return { ...state, errorMessage: errorMessages.wildcardFirst };
   }
 
   // Get the word string (with wild card assignments)
@@ -332,7 +355,7 @@ export const submitWord = async (state: GameState): Promise<GameState> => {
   const displayWordString = getDisplayWordString(state.currentWord);
 
   // Server-side validation via Supabase RPC
-  const isValidWord = await validateDanishWord(submittedWordString);
+  const isValidWord = await validateWord(submittedWordString, language);
 
   if (!isValidWord) {
     // Reset streak on invalid word
@@ -340,7 +363,7 @@ export const submitWord = async (state: GameState): Promise<GameState> => {
       ...state,
       currentWord: [],
       wordStreak: 0,
-      errorMessage: `"${displayWordString.toUpperCase()}" er ikke et gyldigt dansk ord.`,
+      errorMessage: errorMessages.invalidWord(displayWordString.toUpperCase()),
     };
   }
 

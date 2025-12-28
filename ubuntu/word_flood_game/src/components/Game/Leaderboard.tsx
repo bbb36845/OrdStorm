@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../SupabaseClient';
 import { Loader2, AlertTriangle, Trophy, RefreshCw, Crown, Medal, Award, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +19,7 @@ interface LeaderboardEntry {
 interface LeaderboardProps {
   currentUserId: string | null;
   onRefresh?: () => void;
+  language?: 'da' | 'en';
 }
 
 const getTodayDateStrings = () => {
@@ -30,7 +32,8 @@ const getTodayDateStrings = () => {
   };
 };
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) => {
+const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh, language = 'da' }) => {
+  const { t } = useTranslation();
   const [dailyScores, setDailyScores] = useState<LeaderboardEntry[]>([]);
   const [allTimeScores, setAllTimeScores] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -48,7 +51,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
     try {
       const { startISO, endISO } = getTodayDateStrings();
 
-      // Fetch All-Time Top 10 Scores with profile join
+      // Fetch All-Time Top 10 Scores with profile join, filtered by language
       const { data: allTimeData, error: allTimeError } = await supabase
         .from('scores')
         .select(`
@@ -60,17 +63,18 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
             display_name
           )
         `)
+        .eq('language', language)
         .order('score', { ascending: false })
         .order('created_at', { ascending: true })
         .limit(10);
 
       if (allTimeError) {
         console.error("Error fetching all-time scores:", allTimeError);
-        throw new Error(`Kunne ikke hente all-time highscores: ${allTimeError.message}`);
+        throw new Error(t('leaderboard.errorAllTime', `Could not fetch all-time highscores: ${allTimeError.message}`));
       }
       setAllTimeScores((allTimeData as LeaderboardEntry[]) || []);
 
-      // Fetch Today's Top 10 Scores
+      // Fetch Today's Top 10 Scores, filtered by language
       const { data: dailyData, error: dailyError } = await supabase
         .from('scores')
         .select(`
@@ -82,6 +86,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
             display_name
           )
         `)
+        .eq('language', language)
         .gte('created_at', startISO)
         .lte('created_at', endISO)
         .order('score', { ascending: false })
@@ -90,7 +95,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
 
       if (dailyError) {
         console.error("Error fetching daily scores:", dailyError);
-        throw new Error(`Kunne ikke hente dagens highscores: ${dailyError.message}`);
+        throw new Error(t('leaderboard.errorDaily', `Could not fetch daily highscores: ${dailyError.message}`));
       }
       setDailyScores((dailyData as LeaderboardEntry[]) || []);
 
@@ -98,14 +103,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("En ukendt fejl opstod under hentning af leaderboard.");
+        setError(t('leaderboard.unknownError', "An unknown error occurred while fetching leaderboard."));
       }
       console.error(err);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, []);
+  }, [language, t]);
 
   useEffect(() => {
     fetchLeaderboardData();
@@ -126,14 +131,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
     const profile = Array.isArray(entry.profiles) ? entry.profiles[0] : entry.profiles;
     if (profile?.display_name) return profile.display_name;
     if (profile?.username) return profile.username;
-    return 'Anonym';
+    return t('leaderboard.anonymous', 'Anonymous');
   };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 size={32} className="animate-spin text-sky-500 mb-3" />
-        <p className="text-sky-600 font-medium">Indlæser leaderboard...</p>
+        <p className="text-sky-600 font-medium">{t('leaderboard.loading')}</p>
       </div>
     );
   }
@@ -142,7 +147,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4">
         <AlertTriangle size={32} className="text-amber-500 mb-3" />
-        <p className="text-gray-700 font-semibold mb-1">Kunne ikke indlæse</p>
+        <p className="text-gray-700 font-semibold mb-1">{t('leaderboard.couldNotLoad', 'Could not load')}</p>
         <p className="text-gray-500 text-sm text-center mb-4">{error}</p>
         <button
           onClick={handleRefresh}
@@ -150,7 +155,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
             font-medium transition-colors flex items-center gap-2"
         >
           <RefreshCw size={16} />
-          Prøv igen
+          {t('leaderboard.tryAgain', 'Try again')}
         </button>
       </div>
     );
@@ -194,7 +199,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
         </h3>
         {isDaily && (
           <span className="text-xs text-gray-400 font-medium">
-            {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })}
+            {new Date().toLocaleDateString(language === 'da' ? 'da-DK' : 'en-US', { day: 'numeric', month: 'short' })}
           </span>
         )}
       </div>
@@ -202,8 +207,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
       {scores.length === 0 ? (
         <div className="text-center py-8 bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100">
           <Sparkles size={24} className="text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-500 text-sm font-medium">Ingen scores endnu</p>
-          <p className="text-gray-400 text-xs mt-1">Vær den første på listen!</p>
+          <p className="text-gray-500 text-sm font-medium">{t('leaderboard.empty')}</p>
+          <p className="text-gray-400 text-xs mt-1">{t('leaderboard.beFirst', 'Be the first on the list!')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -237,7 +242,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
                         {displayName}
                       </span>
                       {isCurrentUser && (
-                        <span className="text-xs text-sky-500">Dig</span>
+                        <span className="text-xs text-sky-500">{t('leaderboard.you', 'You')}</span>
                       )}
                     </div>
                   </div>
@@ -247,9 +252,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
                       ${isCurrentUser ? 'text-indigo-600' : index === 0 ? 'text-yellow-600' : 'text-gray-800'}
                       ${index < 3 ? 'text-xl' : 'text-lg'}
                     `}>
-                      {entry.score.toLocaleString('da-DK')}
+                      {entry.score.toLocaleString(language === 'da' ? 'da-DK' : 'en-US')}
                     </span>
-                    <span className="text-xs text-gray-400 ml-1">pt</span>
+                    <span className="text-xs text-gray-400 ml-1">{t('leaderboard.points')}</span>
                   </div>
                 </motion.div>
               );
@@ -266,7 +271,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
         <div className="flex items-center gap-2">
           <Trophy size={22} className="text-yellow-500" />
           <h2 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-            Leaderboard
+            {t('leaderboard.title')}
           </h2>
         </div>
         <motion.button
@@ -277,21 +282,21 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, onRefresh }) =
           disabled={isRefreshing}
           className="p-2 rounded-xl text-gray-400 hover:text-sky-600 hover:bg-sky-50
             transition-colors duration-200 disabled:opacity-50"
-          title="Opdater leaderboard"
+          title={t('leaderboard.refresh', 'Refresh leaderboard')}
         >
           <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
         </motion.button>
       </div>
 
       {renderScoreList(
-        "Dagens Bedste",
+        t('leaderboard.daily'),
         dailyScores,
         <Trophy size={18} className="text-yellow-500" />,
         true
       )}
 
       {renderScoreList(
-        "All Time",
+        t('leaderboard.allTime'),
         allTimeScores,
         <Crown size={18} className="text-amber-600" />
       )}

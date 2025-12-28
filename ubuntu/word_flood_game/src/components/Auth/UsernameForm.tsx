@@ -1,4 +1,5 @@
 import React, { useState, FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Loader2, User } from 'lucide-react';
 
 interface UsernameFormProps {
@@ -14,6 +15,7 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
   errorMessage,
   score
 }) => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -23,16 +25,16 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
 
     const trimmedUsername = username.trim();
     if (trimmedUsername.length < 2) {
-      setLocalError("Brugernavn skal være mindst 2 tegn");
+      setLocalError(t('auth.usernameTooShort'));
       return;
     }
     if (trimmedUsername.length > 20) {
-      setLocalError("Brugernavn må højst være 20 tegn");
+      setLocalError(t('auth.usernameTooLong', 'Username must be at most 20 characters'));
       return;
     }
     // Only allow letters, numbers, and Danish characters
     if (!/^[a-zA-Z0-9æøåÆØÅ_-]+$/.test(trimmedUsername)) {
-      setLocalError("Brugernavn må kun indeholde bogstaver, tal, _ og -");
+      setLocalError(t('auth.usernameInvalidChars', 'Username can only contain letters, numbers, _ and -'));
       return;
     }
 
@@ -46,17 +48,17 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
       {score !== undefined && (
         <div className="text-center mb-4">
           <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            {score} point
+            {t('auth.yourScore', { score })}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Indtast et brugernavn for at gemme din score
+            {t('auth.enterUsername')}
           </p>
         </div>
       )}
 
       <div>
         <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-          Brugernavn
+          {t('auth.usernamePlaceholder')}
         </label>
         <div className="relative">
           <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -65,7 +67,7 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Dit brugernavn"
+            placeholder={t('auth.usernamePlaceholder')}
             autoFocus
             maxLength={20}
             className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl shadow-sm
@@ -74,7 +76,7 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
           />
         </div>
         <p className="text-xs text-gray-400 mt-1">
-          2-20 tegn, bogstaver og tal
+          {t('auth.usernameHint', '2-20 characters, letters and numbers')}
         </p>
       </div>
 
@@ -96,10 +98,10 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
         {isLoading ? (
           <>
             <Loader2 size={18} className="animate-spin" />
-            Gemmer...
+            {t('auth.saving')}
           </>
         ) : (
-          'Gem Score'
+          t('auth.save')
         )}
       </button>
     </form>

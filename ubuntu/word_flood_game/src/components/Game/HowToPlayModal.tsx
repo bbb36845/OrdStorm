@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, Bomb, Snowflake, Sparkles, Link, Timer, Lock, Flame } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { X, Bomb, Snowflake, Sparkles, Link, Timer, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface HowToPlayModalProps {
@@ -8,6 +9,8 @@ interface HowToPlayModalProps {
 }
 
 const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   return (
@@ -35,24 +38,30 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
 
           <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
             <Sparkles className="text-indigo-500" size={24} />
-            Sådan Spiller Du LetsWord
+            {t('howToPlay.title')}
           </h2>
 
           <div className="space-y-5 text-gray-700">
+            {/* Goal */}
+            <section>
+              <h3 className="font-semibold text-lg text-gray-800 mb-2">{t('howToPlay.goal')}</h3>
+              <p className="text-sm">{t('howToPlay.goalText')}</p>
+            </section>
+
             {/* Basic rules */}
             <section>
-              <h3 className="font-semibold text-lg text-gray-800 mb-2">Grundlæggende Regler</h3>
+              <h3 className="font-semibold text-lg text-gray-800 mb-2">{t('howToPlay.rules')}</h3>
               <ul className="list-disc list-inside space-y-1.5 text-sm">
-                <li>Klik på bogstaver for at danne ord (minimum 3 bogstaver)</li>
-                <li>Indsend gyldige danske ord for at score point</li>
-                <li>Nye bogstaver dukker op hvert 1,2 sekund</li>
-                <li>Spillet slutter når brættet er helt fyldt</li>
+                <li>{t('howToPlay.rule1')}</li>
+                <li>{t('howToPlay.rule2')}</li>
+                <li>{t('howToPlay.rule3')}</li>
+                <li>{t('howToPlay.rule4')}</li>
               </ul>
             </section>
 
             {/* Special letters */}
             <section>
-              <h3 className="font-semibold text-lg text-gray-800 mb-3">Specielle Bogstaver</h3>
+              <h3 className="font-semibold text-lg text-gray-800 mb-3">{t('howToPlay.specialLetters')}</h3>
               <div className="grid gap-2.5">
                 {/* 2x Bonus */}
                 <div className="flex items-center gap-3 p-2.5 bg-yellow-50 rounded-xl border border-yellow-200">
@@ -60,8 +69,8 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
                     2x
                   </div>
                   <div>
-                    <span className="font-medium text-yellow-700">2x Bonus</span>
-                    <p className="text-xs text-gray-600">Fordobler ordets score</p>
+                    <span className="font-medium text-yellow-700">2x</span>
+                    <p className="text-xs text-gray-600">{t('howToPlay.bonus2x')}</p>
                   </div>
                 </div>
 
@@ -71,8 +80,8 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
                     3x
                   </div>
                   <div>
-                    <span className="font-medium text-purple-700">3x Bonus</span>
-                    <p className="text-xs text-gray-600">Tredobler ordets score</p>
+                    <span className="font-medium text-purple-700">3x</span>
+                    <p className="text-xs text-gray-600">{t('howToPlay.bonus3x')}</p>
                   </div>
                 </div>
 
@@ -82,8 +91,8 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
                     <Bomb size={18} />
                   </div>
                   <div>
-                    <span className="font-medium text-red-700">Bombe</span>
-                    <p className="text-xs text-gray-600">Rydder et 3x3 felt rundt om sig</p>
+                    <span className="font-medium text-red-700"><Bomb className="inline w-4 h-4" /></span>
+                    <p className="text-xs text-gray-600">{t('howToPlay.bomb')}</p>
                   </div>
                 </div>
 
@@ -93,8 +102,8 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
                     <Sparkles size={18} />
                   </div>
                   <div>
-                    <span className="font-medium text-purple-700">Joker (?)</span>
-                    <p className="text-xs text-gray-600">Vises som ? - kan bruges som et hvilket som helst bogstav</p>
+                    <span className="font-medium text-purple-700">?</span>
+                    <p className="text-xs text-gray-600">{t('howToPlay.wild')}</p>
                   </div>
                 </div>
 
@@ -104,8 +113,8 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
                     <Snowflake size={18} />
                   </div>
                   <div>
-                    <span className="font-medium text-cyan-700">Is</span>
-                    <p className="text-xs text-gray-600">Fryser nye bogstaver i 5 sekunder</p>
+                    <span className="font-medium text-cyan-700"><Snowflake className="inline w-4 h-4" /></span>
+                    <p className="text-xs text-gray-600">{t('howToPlay.ice')}</p>
                   </div>
                 </div>
 
@@ -115,8 +124,8 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
                     <Link size={18} />
                   </div>
                   <div>
-                    <span className="font-medium text-green-700">Kæde</span>
-                    <p className="text-xs text-gray-600">Rydder alle tilstødende bogstaver</p>
+                    <span className="font-medium text-green-700"><Link className="inline w-4 h-4" /></span>
+                    <p className="text-xs text-gray-600">{t('howToPlay.chain')}</p>
                   </div>
                 </div>
 
@@ -126,19 +135,8 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
                     <Timer size={18} />
                   </div>
                   <div>
-                    <span className="font-medium text-red-800">Tikkende Bombe</span>
-                    <p className="text-xs text-gray-600">Brug den inden 15 sek - ellers eksploderer den og fylder felter!</p>
-                  </div>
-                </div>
-
-                {/* Locked */}
-                <div className="flex items-center gap-3 p-2.5 bg-gray-100 rounded-xl border border-gray-300">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center text-gray-300 shadow">
-                    <Lock size={18} />
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700">Låst</span>
-                    <p className="text-xs text-gray-600">Kan kun fjernes ved at bruge det i et ord</p>
+                    <span className="font-medium text-red-800"><Timer className="inline w-4 h-4" /></span>
+                    <p className="text-xs text-gray-600">{t('howToPlay.tickingBomb')}</p>
                   </div>
                 </div>
               </div>
@@ -148,23 +146,11 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
             <section>
               <h3 className="font-semibold text-lg text-gray-800 mb-2 flex items-center gap-2">
                 <Flame className="text-orange-500" size={20} />
-                Streak Bonus
+                Streak
               </h3>
               <p className="text-sm text-gray-600">
-                Indsend 3+ ord i træk (inden for 8 sekunder mellem hvert ord) for at få en streak-bonus!
-                Jo længere din streak, jo flere bonuspoint får du.
+                {t('howToPlay.streakDesc', 'Submit 3+ words in a row (within 8 seconds between each word) to get a streak bonus! The longer your streak, the more bonus points you get.')}
               </p>
-            </section>
-
-            {/* Scoring */}
-            <section>
-              <h3 className="font-semibold text-lg text-gray-800 mb-2">Pointsystem</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Basispoint = antal bogstaver</li>
-                <li>6+ bogstaver = 2x score</li>
-                <li>8+ bogstaver = 3x score</li>
-                <li>Brug af Æ, Ø, Å sammen = ekstra bonus</li>
-              </ul>
             </section>
           </div>
 
@@ -173,7 +159,7 @@ const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose }) => {
             className="mt-6 w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700
               text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all"
           >
-            Forstået!
+            {t('howToPlay.close')}
           </button>
         </motion.div>
       </motion.div>
