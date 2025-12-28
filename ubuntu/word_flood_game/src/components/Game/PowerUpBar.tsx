@@ -127,7 +127,7 @@ const PowerUpBar: React.FC<PowerUpBarProps> = ({
       </div>
 
       {/* How to earn hint */}
-      <p className="text-center text-xs text-white/40 mt-2">
+      <p className="text-center text-xs text-gray-500 mt-2">
         {t('powerUps.earnHint')}
       </p>
     </div>

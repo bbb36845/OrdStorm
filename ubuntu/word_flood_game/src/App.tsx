@@ -516,19 +516,19 @@ const AppContent: React.FC = () => {
       </div>
 
       {/* Header */}
-      <header className="w-full max-w-4xl mb-6 flex justify-between items-center relative z-10">
+      <header className="w-full max-w-4xl mb-4 sm:mb-6 flex justify-between items-center relative z-10">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 sm:gap-2"
         >
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 4, repeat: Infinity }}
           >
-            <Zap className="w-8 h-8 text-yellow-300 drop-shadow-lg" />
+            <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 drop-shadow-lg" />
           </motion.div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
             {t('app.title')}
           </h1>
         </motion.div>
@@ -536,18 +536,18 @@ const AppContent: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2 sm:gap-3"
+          className="flex items-center gap-1.5 sm:gap-3"
         >
           {username && (
-            <div className="flex items-center gap-2 px-3 py-2 glass-card rounded-xl">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-2 glass-card rounded-xl">
               <User size={16} className="text-indigo-600" />
               <span className="text-sm text-gray-700 font-medium">{username}</span>
             </div>
           )}
 
           {/* Language indicator */}
-          <div className="flex items-center gap-1.5 px-3 py-2 glass-card rounded-xl">
-            <span className="text-lg">{language === 'da' ? '🇩🇰' : '🇬🇧'}</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 glass-card rounded-xl">
+            <span className="text-base sm:text-lg">{language === 'da' ? '🇩🇰' : '🇬🇧'}</span>
             <span className="text-sm text-gray-700 font-medium hidden sm:inline">
               {language === 'da' ? 'Dansk' : 'English'}
             </span>
@@ -555,7 +555,7 @@ const AppContent: React.FC = () => {
 
           <button
             onClick={() => setIsHowToPlayModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 glass-card hover:bg-white/90
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 glass-card hover:bg-white/90
               text-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all text-sm font-medium btn-premium"
           >
             <Info size={16} />
