@@ -12,6 +12,8 @@ import {
   clearCurrentWord as logicClearCurrentWord,
   submitWord as logicSubmitWord,
   addLetterToBoard as logicAddLetterToBoard,
+  updateTickingBombs as logicUpdateTickingBombs,
+  updateFreezeStatus as logicUpdateFreezeStatus,
   initializeWordList
 } from "./components/Game/GameLogic";
 import {
@@ -26,12 +28,14 @@ import {
   X,
   Sparkles,
   Zap,
-  User
+  User,
+  Flame,
+  Snowflake
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const STORAGE_KEY_USERNAME = "ordstorm_username";
-const STORAGE_KEY_USER_ID = "ordstorm_user_id";
+const STORAGE_KEY_USERNAME = "letsword_username";
+const STORAGE_KEY_USER_ID = "letsword_user_id";
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(() => initializeGameState(6, 6));
@@ -290,9 +294,34 @@ const App: React.FC = () => {
         if (prevState.isGameOver) return prevState;
         return logicAddLetterToBoard(prevState);
       });
-    }, 1000);
+    }, 1200); // 1.2 seconds between letters (20% slower)
     return () => clearInterval(addLetterInterval);
   }, [gameState.isGameOver, gameState.isWordListLoading]);
+
+  // Ticking bomb update loop - every 500ms to update bomb timers
+  useEffect(() => {
+    if (gameState.isGameOver) return;
+
+    const tickingBombInterval = setInterval(() => {
+      setGameState(prevState => {
+        if (prevState.isGameOver) return prevState;
+        return logicUpdateTickingBombs(prevState);
+      });
+    }, 500);
+
+    return () => clearInterval(tickingBombInterval);
+  }, [gameState.isGameOver]);
+
+  // Freeze timer update - check if freeze should end
+  useEffect(() => {
+    if (!gameState.isFrozen) return;
+
+    const freezeCheckInterval = setInterval(() => {
+      setGameState(prevState => logicUpdateFreezeStatus(prevState));
+    }, 100);
+
+    return () => clearInterval(freezeCheckInterval);
+  }, [gameState.isFrozen]);
 
   // Loading state
   if (isLoadingUser) {
@@ -309,7 +338,7 @@ const App: React.FC = () => {
             transition={{ duration: 2, repeat: Infinity }}
             className="text-5xl font-extrabold text-white mb-6 drop-shadow-lg"
           >
-            OrdStorm
+            LetsWord
           </motion.h1>
           <Loader2 size={48} className="animate-spin text-white/90 mx-auto" />
           <p className="mt-4 text-white/80 text-sm">Indlæser spil...</p>
@@ -353,7 +382,7 @@ const App: React.FC = () => {
             <Zap className="w-8 h-8 text-yellow-300 drop-shadow-lg" />
           </motion.div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
-            OrdStorm
+            LetsWord
           </h1>
         </motion.div>
 
@@ -408,9 +437,38 @@ const App: React.FC = () => {
             </div>
           )}
 
+          {/* Freeze indicator */}
+          {gameState.isFrozen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-full shadow-lg"
+            >
+              <Snowflake size={16} className="animate-spin" />
+              <span className="text-sm font-semibold">Frosset!</span>
+            </motion.div>
+          )}
+
+          {/* Streak indicator */}
+          {gameState.wordStreak >= 3 && !gameState.isGameOver && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute top-2 right-2 z-30 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg"
+            >
+              <Flame size={14} />
+              <span className="text-sm font-bold">{gameState.wordStreak}x Streak!</span>
+            </motion.div>
+          )}
+
           {/* Game content */}
           {!gameState.isGameOver ? (
-            <GameBoard board={gameState.board} onLetterClick={onLetterClickHandler} currentWord={gameState.currentWord} />
+            <GameBoard
+              board={gameState.board}
+              onLetterClick={onLetterClickHandler}
+              currentWord={gameState.currentWord}
+              isFrozen={gameState.isFrozen}
+            />
           ) : (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -647,7 +705,7 @@ const App: React.FC = () => {
         className="mt-8 text-center relative z-10"
       >
         <p className="text-white/60 text-xs font-medium">
-          &copy; 2025 Mark Jensen &middot; <span className="text-white/80">OrdStorm</span>
+          &copy; 2025 Mark Jensen &middot; <span className="text-white/80">LetsWord</span>
         </p>
       </motion.footer>
 

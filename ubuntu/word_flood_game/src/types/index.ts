@@ -1,7 +1,24 @@
+// Special letter types
+export type LetterType =
+  | 'normal'      // Regular letter
+  | 'bonus2x'     // 2x multiplier (existing isBonus)
+  | 'bonus3x'     // 3x multiplier
+  | 'bomb'        // Clears 3x3 area when used
+  | 'wild'        // Can be any letter (wildcard)
+  | 'ice'         // Freezes timer for 5 seconds when used
+  | 'chain'       // Clears adjacent letters when used
+  | 'tickingBomb' // Explodes if not used in time
+  | 'locked';     // Can only be removed by using in a word
+
 export interface Letter {
   id: string;
   char: string;
-  isBonus: boolean;
+  isBonus: boolean; // Legacy - kept for compatibility, use letterType instead
+  letterType: LetterType;
+  row: number; // Position on board (for bomb/chain effects)
+  col: number;
+  tickingBombTimer?: number; // Seconds remaining before explosion (for tickingBomb type)
+  createdAt?: number; // Timestamp for ticking bomb countdown
 }
 
 export type Board = (Letter | null)[][];
@@ -19,6 +36,16 @@ export interface GameState {
   wordListErrorMessage: string | null; // Legacy - kept for compatibility
   normalLettersSinceLastBonus: number; // Tæller for bonusbogstavslogik
   nextBonusIn: number; // Antal normale bogstaver før næste bonus
+
+  // Power-up and streak tracking
+  isFrozen: boolean; // Timer is frozen (from ice letter)
+  freezeEndTime: number | null; // When freeze ends (timestamp)
+  wordStreak: number; // Consecutive valid words submitted
+  lastWordTime: number | null; // Timestamp of last word submission
+
+  // Special letter spawn tracking
+  lettersSinceSpecial: number; // Letters since last special (non-bonus) letter
+  nextSpecialIn: number; // Letters until next special spawns
 }
 
 export interface User {

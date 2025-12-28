@@ -1,8 +1,10 @@
-# OrdStorm - Project Documentation
+# LetsWord - Project Documentation
 
 ## Project Overview
 
-OrdStorm (Word Storm) is a Danish word puzzle game where players form words from randomly placed letters on a 6x6 grid before it fills up completely.
+LetsWord is a Danish word puzzle game where players form words from randomly placed letters on a 6x6 grid before it fills up completely.
+
+**Domain**: https://letsword.app
 
 ## Technology Stack
 
@@ -24,7 +26,8 @@ OrdStorm (Word Storm) is a Danish word puzzle game where players form words from
 - **Branch**: main
 
 ### Vercel
-- **Project**: OrdStorm (check Vercel dashboard for exact project name)
+- **Project**: LetsWord
+- **Domain**: letsword.app
 
 ## MCP Servers
 

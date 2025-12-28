@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import confetti from 'canvas-confetti';
 
-// Confetti celebration effects for OrdStorm
+// Confetti celebration effects for LetsWord
 export const useConfetti = () => {
   // Basic confetti burst for valid words
   const celebrateWord = useCallback((wordLength: number) => {

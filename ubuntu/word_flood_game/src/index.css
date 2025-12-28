@@ -27,7 +27,7 @@
 }
 
 /* ============================================
-   ORDSTORM PREMIUM UI STYLES
+   LETSWORD PREMIUM UI STYLES
    ============================================ */
 
 /* Static gradient background (performance optimized) */
@@ -191,6 +191,16 @@
   box-shadow:
     inset 0 2px 10px rgba(0, 0, 0, 0.05),
     0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  /* iOS touch handling */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Ensure letter tiles are tappable on iOS */
+.game-board > div {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Trophy animation for game over */
@@ -280,5 +290,183 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ============================================
+   SPECIAL LETTER ANIMATIONS
+   ============================================ */
+
+/* Rainbow/Wild letter gradient animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* Ice letter crystallize effect */
+@keyframes iceSparkle {
+  0%, 100% {
+    box-shadow:
+      0 0 10px 2px rgba(34, 211, 238, 0.4),
+      inset 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px 5px rgba(34, 211, 238, 0.6),
+      0 0 30px 10px rgba(165, 243, 252, 0.3),
+      inset 0 0 15px rgba(255, 255, 255, 0.7);
+  }
+}
+
+.ice-sparkle {
+  animation: iceSparkle 2s ease-in-out infinite;
+}
+
+/* Bomb letter glow */
+@keyframes bombGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 10px 3px rgba(239, 68, 68, 0.5),
+      0 0 20px 5px rgba(249, 115, 22, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 20px 8px rgba(239, 68, 68, 0.7),
+      0 0 40px 15px rgba(249, 115, 22, 0.4);
+  }
+}
+
+.bomb-glow {
+  animation: bombGlow 1s ease-in-out infinite;
+}
+
+/* Chain letter pulse */
+@keyframes chainPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px 3px rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 20px 8px rgba(34, 197, 94, 0.6),
+      0 0 30px 12px rgba(16, 185, 129, 0.3);
+  }
+}
+
+.chain-pulse {
+  animation: chainPulse 1.5s ease-in-out infinite;
+}
+
+/* Ticking bomb urgent pulse */
+@keyframes tickingUrgent {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 10px 3px rgba(220, 38, 38, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 25px 10px rgba(220, 38, 38, 0.8),
+      0 0 40px 20px rgba(185, 28, 28, 0.4);
+  }
+}
+
+.ticking-urgent {
+  animation: tickingUrgent 0.5s ease-in-out infinite;
+}
+
+/* 3x bonus super glow */
+@keyframes superBonusGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 15px 5px rgba(168, 85, 247, 0.5),
+      0 0 30px 10px rgba(236, 72, 153, 0.3),
+      inset 0 0 10px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 30px 10px rgba(168, 85, 247, 0.7),
+      0 0 50px 20px rgba(236, 72, 153, 0.4),
+      inset 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.super-bonus-glow {
+  animation: superBonusGlow 1.5s ease-in-out infinite;
+}
+
+/* Locked letter static effect */
+.locked-letter {
+  filter: grayscale(30%);
+  box-shadow:
+    inset 0 0 10px rgba(0, 0, 0, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Freeze overlay animation */
+@keyframes freezeOverlay {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.freeze-overlay {
+  animation: freezeOverlay 1s ease-in-out infinite;
+}
+
+/* Streak fire effect */
+@keyframes streakFire {
+  0%, 100% {
+    text-shadow:
+      0 0 5px #ff6b35,
+      0 0 10px #ff6b35,
+      0 0 15px #f7931e;
+  }
+  50% {
+    text-shadow:
+      0 0 10px #ff6b35,
+      0 0 20px #ff6b35,
+      0 0 30px #f7931e,
+      0 0 40px #ffc837;
+  }
+}
+
+.streak-fire {
+  animation: streakFire 0.5s ease-in-out infinite;
+}
+
+/* Letter explosion effect */
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.explode {
+  animation: explode 0.3s ease-out forwards;
 }
 
