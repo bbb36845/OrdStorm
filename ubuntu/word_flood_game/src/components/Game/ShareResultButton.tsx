@@ -13,6 +13,26 @@ const ShareResultButton: React.FC<ShareResultButtonProps> = ({ result, className
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
+  // Generate share URL with OG image parameters
+  const generateShareUrl = (): string => {
+    const params = new URLSearchParams({
+      score: result.score.toString(),
+      words: result.wordCount.toString(),
+      mode: result.gameMode,
+      lang: result.language,
+    });
+
+    if (result.longestWord) {
+      params.set('longest', result.longestWord);
+    }
+
+    if (result.gameMode === 'daily' && result.rank) {
+      params.set('rank', result.rank.toString());
+    }
+
+    return `https://letsword.app/api/share?${params.toString()}`;
+  };
+
   const generateShareText = (): string => {
     const lines: string[] = [];
 
@@ -41,7 +61,7 @@ const ShareResultButton: React.FC<ShareResultButtonProps> = ({ result, className
     }
 
     lines.push('');
-    lines.push(t('share.playNow'));
+    lines.push(generateShareUrl());
 
     return lines.join('\n');
   };
@@ -76,6 +96,7 @@ const ShareResultButton: React.FC<ShareResultButtonProps> = ({ result, className
 
   const handleShare = async () => {
     const shareText = generateShareText();
+    const shareUrl = generateShareUrl();
 
     // Try native share API first (mobile)
     if (navigator.share) {
@@ -83,6 +104,7 @@ const ShareResultButton: React.FC<ShareResultButtonProps> = ({ result, className
         await navigator.share({
           title: t('share.title'),
           text: shareText,
+          url: shareUrl,
         });
         return;
       } catch (err) {
