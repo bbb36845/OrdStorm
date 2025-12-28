@@ -1,3 +1,12 @@
+// Earnable power-ups that players can activate at will
+export type PowerUpType = 'nuke' | 'shuffle' | 'timeFreeze';
+
+export interface PowerUps {
+  nuke: number;      // Clears entire board
+  shuffle: number;   // Rearranges all letters
+  timeFreeze: number; // Freezes spawning for 10 seconds
+}
+
 // Special letter types
 export type LetterType =
   | 'normal'      // Regular letter
@@ -47,6 +56,10 @@ export interface GameState {
   // Special letter spawn tracking
   lettersSinceSpecial: number; // Letters since last special (non-bonus) letter
   nextSpecialIn: number; // Letters until next special spawns
+
+  // Earnable power-ups
+  powerUps: PowerUps;
+  pendingPowerUp: PowerUpType | null; // Power-up just earned (for animation/notification)
 }
 
 export interface User {

@@ -1,4 +1,4 @@
-import { Board, Letter, GameState, LetterType } from "../../types";
+import { Board, Letter, GameState, LetterType, PowerUpType } from "../../types";
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from "../../SupabaseClient";
 
@@ -94,6 +94,9 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     lastWordTime: null,
     lettersSinceSpecial: 0,
     nextSpecialIn: 8 + Math.floor(Math.random() * 11), // Special every 8-18 letters (more frequent for longer games)
+    // Earnable power-ups
+    powerUps: { nuke: 0, shuffle: 0, timeFreeze: 0 },
+    pendingPowerUp: null,
   };
 };
 
@@ -383,6 +386,35 @@ export const submitWord = async (state: GameState): Promise<GameState> => {
 
   const wordScore = calculateScore(state.currentWord, newStreak);
 
+  // Check for earned power-ups based on word length and streak
+  const wordLength = submittedWordString.length;
+  const earnedPowerUps = { ...state.powerUps };
+  let pendingPowerUp: PowerUpType | null = null;
+
+  // Word length rewards (only award one per word, prioritize rarest)
+  if (wordLength >= 7) {
+    earnedPowerUps.nuke += 1;
+    pendingPowerUp = 'nuke';
+  } else if (wordLength >= 6) {
+    earnedPowerUps.shuffle += 1;
+    pendingPowerUp = 'shuffle';
+  } else if (wordLength >= 5) {
+    earnedPowerUps.timeFreeze += 1;
+    pendingPowerUp = 'timeFreeze';
+  }
+
+  // Streak rewards (can stack with word length rewards)
+  if (newStreak === 10) {
+    earnedPowerUps.nuke += 1;
+    pendingPowerUp = 'nuke'; // Override to show the best reward
+  } else if (newStreak === 5) {
+    earnedPowerUps.shuffle += 1;
+    if (!pendingPowerUp) pendingPowerUp = 'shuffle';
+  } else if (newStreak === 3) {
+    earnedPowerUps.timeFreeze += 1;
+    if (!pendingPowerUp) pendingPowerUp = 'timeFreeze';
+  }
+
   return {
     ...state,
     board: newBoard,
@@ -394,6 +426,8 @@ export const submitWord = async (state: GameState): Promise<GameState> => {
     lastWordTime: now,
     isFrozen: shouldFreeze ? true : state.isFrozen,
     freezeEndTime: shouldFreeze ? Date.now() + 5000 : state.freezeEndTime, // 5 second freeze
+    powerUps: earnedPowerUps,
+    pendingPowerUp,
   };
 };
 
@@ -557,4 +591,95 @@ export const addLetterToBoard = (state: GameState): GameState => {
     lettersSinceSpecial: updatedLettersSinceSpecial,
     nextSpecialIn: updatedNextSpecialIn,
   };
+};
+
+// ============================================
+// POWER-UP ACTIVATION FUNCTIONS
+// ============================================
+
+// Activate NUKE - clears entire board
+export const activateNuke = (state: GameState): GameState => {
+  if (state.powerUps.nuke <= 0 || state.isGameOver) return state;
+
+  // Clear the entire board
+  const newBoard = createInitialBoard(state.boardSize.rows, state.boardSize.cols);
+
+  return {
+    ...state,
+    board: newBoard,
+    powerUps: { ...state.powerUps, nuke: state.powerUps.nuke - 1 },
+    pendingPowerUp: null,
+    errorMessage: null,
+  };
+};
+
+// Activate SHUFFLE - rearranges all letters randomly
+export const activateShuffle = (state: GameState): GameState => {
+  if (state.powerUps.shuffle <= 0 || state.isGameOver) return state;
+
+  // Collect all letters
+  const letters: Letter[] = [];
+  for (let r = 0; r < state.boardSize.rows; r++) {
+    for (let c = 0; c < state.boardSize.cols; c++) {
+      if (state.board[r][c]) {
+        letters.push(state.board[r][c]!);
+      }
+    }
+  }
+
+  // Shuffle letters array (Fisher-Yates)
+  for (let i = letters.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [letters[i], letters[j]] = [letters[j], letters[i]];
+  }
+
+  // Place letters back in random positions
+  const newBoard = createInitialBoard(state.boardSize.rows, state.boardSize.cols);
+  const positions: { r: number; c: number }[] = [];
+
+  for (let r = 0; r < state.boardSize.rows; r++) {
+    for (let c = 0; c < state.boardSize.cols; c++) {
+      positions.push({ r, c });
+    }
+  }
+
+  // Shuffle positions
+  for (let i = positions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
+
+  // Place letters in shuffled positions
+  letters.forEach((letter, idx) => {
+    const pos = positions[idx];
+    newBoard[pos.r][pos.c] = { ...letter, row: pos.r, col: pos.c };
+  });
+
+  return {
+    ...state,
+    board: newBoard,
+    currentWord: [], // Clear current selection as positions changed
+    powerUps: { ...state.powerUps, shuffle: state.powerUps.shuffle - 1 },
+    pendingPowerUp: null,
+    errorMessage: null,
+  };
+};
+
+// Activate TIME FREEZE - freezes letter spawning for 10 seconds
+export const activateTimeFreeze = (state: GameState): GameState => {
+  if (state.powerUps.timeFreeze <= 0 || state.isGameOver) return state;
+
+  return {
+    ...state,
+    isFrozen: true,
+    freezeEndTime: Date.now() + 10000, // 10 second freeze
+    powerUps: { ...state.powerUps, timeFreeze: state.powerUps.timeFreeze - 1 },
+    pendingPowerUp: null,
+    errorMessage: null,
+  };
+};
+
+// Clear pending power-up notification
+export const clearPendingPowerUp = (state: GameState): GameState => {
+  return { ...state, pendingPowerUp: null };
 };

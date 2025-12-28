@@ -3,10 +3,11 @@ import { supabase } from "./SupabaseClient";
 import GameBoard from "./components/Game/GameBoard";
 import HowToPlayModal from "./components/Game/HowToPlayModal";
 import WildCardPicker from "./components/Game/WildCardPicker";
+import PowerUpBar from "./components/Game/PowerUpBar";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
 import { useConfetti } from "./components/Game/Confetti";
-import { GameState, Letter } from "./types";
+import { GameState, Letter, PowerUpType } from "./types";
 import {
   initializeGameState,
   handleLetterClick as logicHandleLetterClick,
@@ -16,6 +17,10 @@ import {
   updateTickingBombs as logicUpdateTickingBombs,
   updateFreezeStatus as logicUpdateFreezeStatus,
   assignWildCardLetter as logicAssignWildCardLetter,
+  activateNuke as logicActivateNuke,
+  activateShuffle as logicActivateShuffle,
+  activateTimeFreeze as logicActivateTimeFreeze,
+  clearPendingPowerUp as logicClearPendingPowerUp,
   getDisplayWordString,
   initializeWordList
 } from "./components/Game/GameLogic";
@@ -323,6 +328,37 @@ const App: React.FC = () => {
     setPendingWildCardId(null);
   }, [pendingWildCardId]);
 
+  // Power-up activation handlers
+  const onPowerUpActivate = useCallback((type: PowerUpType) => {
+    if (gameState.isGameOver || gameState.isLoading) return;
+
+    switch (type) {
+      case 'nuke':
+        setGameState((prevState) => logicActivateNuke(prevState));
+        break;
+      case 'shuffle':
+        setGameState((prevState) => logicActivateShuffle(prevState));
+        break;
+      case 'timeFreeze':
+        setGameState((prevState) => logicActivateTimeFreeze(prevState));
+        break;
+    }
+  }, [gameState.isGameOver, gameState.isLoading]);
+
+  const onPendingPowerUpDismiss = useCallback(() => {
+    setGameState((prevState) => logicClearPendingPowerUp(prevState));
+  }, []);
+
+  // Auto-dismiss pending power-up notification after 2 seconds
+  useEffect(() => {
+    if (gameState.pendingPowerUp) {
+      const timer = setTimeout(() => {
+        setGameState((prevState) => logicClearPendingPowerUp(prevState));
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.pendingPowerUp]);
+
   const onClearWordHandler = useCallback(() => {
     if (gameState.isGameOver || gameState.isLoading || gameState.isWordListLoading) return;
     setGameState((prevState) => logicClearCurrentWord(prevState));
@@ -525,12 +561,25 @@ const App: React.FC = () => {
 
           {/* Game content */}
           {!gameState.isGameOver ? (
-            <GameBoard
-              board={gameState.board}
-              onLetterClick={onLetterClickHandler}
-              currentWord={gameState.currentWord}
-              isFrozen={gameState.isFrozen}
-            />
+            <>
+              <GameBoard
+                board={gameState.board}
+                onLetterClick={onLetterClickHandler}
+                currentWord={gameState.currentWord}
+                isFrozen={gameState.isFrozen}
+              />
+
+              {/* Power-ups bar */}
+              <div className="mt-4">
+                <PowerUpBar
+                  powerUps={gameState.powerUps}
+                  onActivate={onPowerUpActivate}
+                  disabled={gameState.isLoading || gameState.isGameOver}
+                  pendingPowerUp={gameState.pendingPowerUp}
+                  onPendingDismiss={onPendingPowerUpDismiss}
+                />
+              </div>
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
