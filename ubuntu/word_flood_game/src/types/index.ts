@@ -13,10 +13,10 @@ export interface GameState {
   foundWords: string[];
   isGameOver: boolean;
   boardSize: { rows: number; cols: number };
-  isLoading: boolean; // Used for word submission validation (previously API, now local but can keep for UI consistency)
+  isLoading: boolean; // Used for word submission validation via Supabase RPC
   errorMessage: string | null;
-  isWordListLoading: boolean; // Tracks if the local word list is being loaded
-  wordListErrorMessage: string | null; // Stores any error message from loading the word list
+  isWordListLoading: boolean; // Legacy - kept for compatibility but always false now (server-side validation)
+  wordListErrorMessage: string | null; // Legacy - kept for compatibility
   normalLettersSinceLastBonus: number; // Tæller for bonusbogstavslogik
   nextBonusIn: number; // Antal normale bogstaver før næste bonus
 }

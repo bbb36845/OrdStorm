@@ -1,5 +1,6 @@
 import { Board, Letter, GameState } from "../../types";
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "../../SupabaseClient";
 
 // Danish letter frequency-based weighted selection
 // Vowels (A, E, I, O, U, Y, Æ, Ø, Å) are more common and weighted higher
@@ -38,38 +39,14 @@ const WEIGHTED_LETTERS = [
 
 const MIN_WORD_LENGTH = 3;
 
-// --- Local Word List Logic ---
-let wordSet: Set<string> | null = null;
-let isLoadingWordList = false;
-let wordListError: string | null = null;
-
-async function fetchWordList(): Promise<Set<string>> {
-  const response = await fetch('/assets/danish_words.txt');
-  if (!response.ok) {
-    throw new Error(`Failed to load word list: ${response.statusText}`);
-  }
-  const text = await response.text();
-  const words = text.split(/\r?\n/).map(word => word.trim().toLowerCase()).filter(word => word.length >= MIN_WORD_LENGTH);
-  return new Set(words);
-}
+// --- Server-side Word Validation via Supabase RPC ---
+// No more client-side dictionary loading - validation happens on the server
 
 export async function initializeWordList(): Promise<void> {
-  if (wordSet || isLoadingWordList) {
-    return;
-  }
-  isLoadingWordList = true;
-  wordListError = null;
-  try {
-    wordSet = await fetchWordList();
-    console.log(`Danish word list loaded successfully. ${wordSet.size} words.`);
-  } catch (error) {
-    console.error("Error initializing word list:", error);
-    wordListError = error instanceof Error ? error.message : "Unknown error loading word list";
-    wordSet = new Set(); 
-  }
-  isLoadingWordList = false;
+  // No-op: We no longer load a dictionary client-side
+  // Word validation is now done via Supabase RPC
+  console.log("Word validation ready (server-side via Supabase RPC)");
 }
-// --- End of Local Word List Logic ---
 
 export const createInitialBoard = (rows: number, cols: number): Board => {
   const board: Board = [];
@@ -90,10 +67,10 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     foundWords: [],
     isGameOver: false,
     boardSize: { rows, cols },
-    isLoading: false, 
+    isLoading: false,
     errorMessage: null,
-    isWordListLoading: true, 
-    wordListErrorMessage: wordListError,
+    isWordListLoading: false, // No longer loading - server-side validation is instant
+    wordListErrorMessage: null,
     normalLettersSinceLastBonus: 0,
     nextBonusIn: 10 + Math.floor(Math.random() * 21), // Tilfældigt mellem 10 og 30
   };
@@ -131,33 +108,41 @@ const calculateScore = (wordLetters: Letter[]): number => {
   return score;
 };
 
-export const validateDanishWord = (word: string): boolean => {
-  if (!wordSet) {
-    console.error("Word list not initialized yet.");
-    return false; 
-  }
+// Server-side word validation using Supabase RPC
+export const validateDanishWord = async (word: string): Promise<boolean> => {
   if (word.length < MIN_WORD_LENGTH) return false;
-  return wordSet.has(word.toLowerCase());
+
+  try {
+    const { data, error } = await supabase.rpc('validate_word', {
+      word_to_check: word.toLowerCase()
+    });
+
+    if (error) {
+      console.error("Error validating word:", error);
+      return false;
+    }
+
+    return data === true;
+  } catch (err) {
+    console.error("Error calling validate_word RPC:", err);
+    return false;
+  }
 };
 
-export const submitWord = (state: GameState): GameState => {
+export const submitWord = async (state: GameState): Promise<GameState> => {
   if (state.currentWord.length < MIN_WORD_LENGTH) {
     return { ...state, errorMessage: "Ordet skal være mindst 3 bogstaver langt.", currentWord: [] };
   }
-  if (!wordSet || isLoadingWordList) {
-    return { ...state, errorMessage: "Ordbogen indlæses stadig, prøv igen om et øjeblik.", currentWord: [] };
-  }
-  if (wordListError && !wordSet.size) { 
-     return { ...state, errorMessage: `Fejl ved indlæsning af ordbog: ${wordListError}. Kan ikke validere ord.`, currentWord: [] };
-  }
 
   const submittedWordString = state.currentWord.map(l => l.char).join("");
-  const isValidWord = validateDanishWord(submittedWordString);
+
+  // Server-side validation via Supabase RPC
+  const isValidWord = await validateDanishWord(submittedWordString);
 
   if (!isValidWord) {
     return {
       ...state,
-      currentWord: [], 
+      currentWord: [],
       errorMessage: `"${submittedWordString.toUpperCase()}" er ikke et gyldigt dansk ord.`,
     };
   }
@@ -174,15 +159,13 @@ export const submitWord = (state: GameState): GameState => {
 
   const wordScore = calculateScore(state.currentWord);
 
-  // REMOVED: const boardAfterGravity = applyGravity(newBoard, state.boardSize.rows, state.boardSize.cols);
-
   return {
     ...state,
-    board: newBoard, // Use newBoard directly, without gravity
+    board: newBoard,
     foundWords: [...state.foundWords, submittedWordString.toUpperCase()],
     currentWord: [],
     score: state.score + wordScore,
-    errorMessage: null, 
+    errorMessage: null,
   };
 };
 

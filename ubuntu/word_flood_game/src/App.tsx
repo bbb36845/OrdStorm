@@ -173,18 +173,10 @@ const App: React.FC = () => {
     }
   }, [profile]);
 
-  // Initialize word list
+  // Initialize word validation (now instant - server-side via Supabase RPC)
   useEffect(() => {
-    const initWords = async () => {
-      setGameState(prev => ({ ...prev, isWordListLoading: true, wordListErrorMessage: null }));
-      await initializeWordList();
-      setGameState(prev => ({
-        ...prev,
-        isWordListLoading: false,
-        wordListErrorMessage: prev.wordListErrorMessage
-      }));
-    };
-    initWords();
+    initializeWordList(); // Just logs ready status, no actual loading
+    setGameState(prev => ({ ...prev, isWordListLoading: false }));
   }, []);
 
   // Handle game over
@@ -336,11 +328,16 @@ const App: React.FC = () => {
     setGameState((prevState) => logicClearCurrentWord(prevState));
   }, [gameState.isGameOver, gameState.isLoading, gameState.isWordListLoading]);
 
-  const onSubmitWordHandler = useCallback(() => {
+  const onSubmitWordHandler = useCallback(async () => {
     if (gameState.isGameOver || gameState.isLoading || gameState.isWordListLoading || currentWordString.length < 3) return;
     setGameState((prevState) => ({ ...prevState, isLoading: true, errorMessage: null }));
-    const newState = logicSubmitWord(gameState);
-    setGameState({ ...newState, isLoading: false });
+    try {
+      const newState = await logicSubmitWord(gameState);
+      setGameState({ ...newState, isLoading: false });
+    } catch (error) {
+      console.error("Error submitting word:", error);
+      setGameState((prevState) => ({ ...prevState, isLoading: false, errorMessage: "Fejl ved validering af ord." }));
+    }
   }, [gameState, currentWordString.length]);
 
   const handleRestartGame = useCallback(() => {
@@ -472,7 +469,7 @@ const App: React.FC = () => {
         <main className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-3/5 relative">
           {/* Loading overlay */}
           <AnimatePresence>
-            {(gameState.isLoading || gameState.isWordListLoading) && (
+            {gameState.isLoading && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -480,9 +477,7 @@ const App: React.FC = () => {
                 className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-20 rounded-2xl"
               >
                 <Loader2 size={40} className="animate-spin text-sky-500" />
-                <p className="mt-3 text-sky-600 font-medium">
-                  {gameState.isWordListLoading ? "Indlæser ordbog..." : "Validerer ord..."}
-                </p>
+                <p className="mt-3 text-sky-600 font-medium">Validerer ord...</p>
               </motion.div>
             )}
           </AnimatePresence>
