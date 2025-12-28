@@ -134,7 +134,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onStart}
-          className="flex items-center justify-center gap-3 px-10 py-5 mb-6
+          className="flex items-center justify-center gap-3 px-10 py-5 mb-6 mx-auto
             bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700
             text-white text-xl font-bold rounded-2xl shadow-2xl hover:shadow-green-500/30
             transition-all btn-premium"
