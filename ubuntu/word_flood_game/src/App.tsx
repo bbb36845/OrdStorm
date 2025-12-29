@@ -8,6 +8,7 @@ import PowerUpBar from "./components/Game/PowerUpBar";
 import TykkeOverlay from "./components/Game/TykkeOverlay";
 import TykkeBonusOverlay from "./components/Game/TykkeBonusOverlay";
 import TykkeBonusTimer from "./components/Game/TykkeBonusTimer";
+import WordScorePopup from "./components/Game/WordScorePopup";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
 import RecordsLeaderboard from "./components/Game/RecordsLeaderboard";
@@ -96,6 +97,14 @@ const AppContent: React.FC = () => {
     records?: GameRecords;
   } | null>(null);
   const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0);
+
+  // Word score popup state
+  const [lastWordScore, setLastWordScore] = useState<{
+    score: number;
+    word: string;
+    streak: number;
+    tykkeBonusActive: boolean;
+  } | null>(null);
 
   // Track score changes for confetti
   useEffect(() => {
@@ -498,6 +507,8 @@ const AppContent: React.FC = () => {
 
   const onSubmitWordHandler = useCallback(async () => {
     if (gameState.isGameOver || gameState.isLoading || gameState.isWordListLoading || currentWordString.length < 3) return;
+    const previousScore = gameState.score;
+    const wordBeingSubmitted = currentWordString;
     setGameState((prevState) => ({ ...prevState, isLoading: true, errorMessage: null }));
     try {
       const newState = await logicSubmitWord(gameState, {
@@ -510,6 +521,19 @@ const AppContent: React.FC = () => {
         }
       });
       setGameState({ ...newState, isLoading: false });
+
+      // Show word score popup if word was valid (score increased)
+      const wordScore = newState.score - previousScore;
+      if (wordScore > 0) {
+        setLastWordScore({
+          score: wordScore,
+          word: wordBeingSubmitted,
+          streak: newState.wordStreak,
+          tykkeBonusActive: newState.tykkeBonusActive
+        });
+        // Clear popup after 1.5 seconds
+        setTimeout(() => setLastWordScore(null), 1500);
+      }
     } catch (error) {
       console.error("Error submitting word:", error);
       setGameState((prevState) => ({ ...prevState, isLoading: false, errorMessage: t('validation.genericError', 'Error validating word.') }));
@@ -771,6 +795,18 @@ const AppContent: React.FC = () => {
               <Flame size={14} />
               <span className="text-sm font-bold">{t('game.streak', { count: gameState.wordStreak })}</span>
             </motion.div>
+          )}
+
+          {/* Word score popup */}
+          {lastWordScore && (
+            <WordScorePopup
+              score={lastWordScore.score}
+              word={lastWordScore.word}
+              bonusInfo={{
+                streak: lastWordScore.streak,
+                tykkeBonusActive: lastWordScore.tykkeBonusActive
+              }}
+            />
           )}
 
           {/* Game content */}
