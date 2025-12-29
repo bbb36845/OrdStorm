@@ -64,6 +64,9 @@
   "leaderboard": {
     "title": "Leaderboard",
     "daily": "I dag",
+    "weekly": "Uge",
+    "monthly": "Måned",
+    "yearly": "År",
     "allTime": "All-time",
     "loading": "Indlæser...",
     "empty": "Ingen scores endnu",

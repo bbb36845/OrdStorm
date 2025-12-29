@@ -64,6 +64,9 @@
   "leaderboard": {
     "title": "Leaderboard",
     "daily": "Today",
+    "weekly": "Week",
+    "monthly": "Month",
+    "yearly": "Year",
     "allTime": "All-time",
     "loading": "Loading...",
     "empty": "No scores yet",
