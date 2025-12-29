@@ -70,8 +70,9 @@ export interface GameState {
   tykkeBonusActive: boolean; // Currently in bonus round
   tykkeBonusEndTime: number | null; // Timestamp when bonus round ends
   tykkeBonusActivating: boolean; // Showing activation overlay
-  wordsWithFourPlusLetters: number; // Count of words with 4+ letters (for bonus eligibility)
-  tykkeBonusUsed: boolean; // Whether bonus round has been used this game (only once per game)
+  consecutiveFourPlusWords: number; // Count of consecutive words with 4+ letters (resets on shorter word)
+  tykkeBonusCount: number; // Number of times bonus round has been used (max 3)
+  lastTykkeBonusTime: number | null; // Timestamp of last bonus round (for 3-min cooldown)
 
   // Record tracking for leaderboards
   wordStartTime: number | null; // Timestamp when first letter was clicked

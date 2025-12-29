@@ -142,8 +142,9 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     tykkeBonusActive: false,
     tykkeBonusEndTime: null,
     tykkeBonusActivating: false,
-    wordsWithFourPlusLetters: 0,
-    tykkeBonusUsed: false,
+    consecutiveFourPlusWords: 0,
+    tykkeBonusCount: 0,
+    lastTykkeBonusTime: null,
     // Record tracking
     wordStartTime: null,
     fastestWordMs: null,
@@ -611,18 +612,22 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
   const canTriggerTykke = state.tykkeCount < 3 && !state.tykkeActive;
   const shouldTriggerTykke = canTriggerTykke && wordString === tykkeWord;
 
-  // Track words with 4+ letters for Tykke Bonus Round eligibility
-  const newWordsWithFourPlusLetters = wordLength >= 4
-    ? state.wordsWithFourPlusLetters + 1
-    : state.wordsWithFourPlusLetters;
+  // Track consecutive words with 4+ letters for Tykke Bonus Round eligibility
+  // Reset counter if word has less than 4 letters
+  const newConsecutiveFourPlusWords = wordLength >= 4
+    ? state.consecutiveFourPlusWords + 1
+    : 0; // Reset on shorter word
 
   // Check if Tykke Bonus Round should activate
-  // Conditions: 3+ words with 4+ letters, not used yet, 50% chance
-  const canTriggerTykkeBonus = !state.tykkeBonusUsed &&
+  // Conditions: 3 consecutive 4+ letter words, max 3 uses per game, 3-min cooldown, 50% chance
+  const TYKKE_BONUS_COOLDOWN = 180000; // 3 minutes
+  const cooldownExpired = !state.lastTykkeBonusTime || (now - state.lastTykkeBonusTime >= TYKKE_BONUS_COOLDOWN);
+  const canTriggerTykkeBonus = state.tykkeBonusCount < 3 &&
     !state.tykkeBonusActive &&
     !state.tykkeBonusActivating &&
-    newWordsWithFourPlusLetters >= 3 &&
-    state.wordsWithFourPlusLetters < 3; // Only on the 3rd qualifying word
+    cooldownExpired &&
+    newConsecutiveFourPlusWords >= 3 &&
+    state.consecutiveFourPlusWords < 3; // Only on the 3rd consecutive qualifying word
 
   const shouldTriggerTykkeBonus = canTriggerTykkeBonus && Math.random() < 0.5;
 
@@ -651,9 +656,10 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
     tykkeActive: shouldTriggerTykke ? true : state.tykkeActive,
     lastTykkeTime: shouldTriggerTykke ? now : state.lastTykkeTime,
     // Tykke Bonus Round tracking
-    wordsWithFourPlusLetters: newWordsWithFourPlusLetters,
+    consecutiveFourPlusWords: shouldTriggerTykkeBonus ? 0 : newConsecutiveFourPlusWords, // Reset after triggering
     tykkeBonusActivating: shouldTriggerTykkeBonus,
-    tykkeBonusUsed: shouldTriggerTykkeBonus ? true : state.tykkeBonusUsed,
+    tykkeBonusCount: shouldTriggerTykkeBonus ? state.tykkeBonusCount + 1 : state.tykkeBonusCount,
+    lastTykkeBonusTime: shouldTriggerTykkeBonus ? now : state.lastTykkeBonusTime,
   };
 };
 
