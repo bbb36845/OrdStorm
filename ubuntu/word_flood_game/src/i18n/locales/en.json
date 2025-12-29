@@ -126,5 +126,11 @@
   "tykke": {
     "title": "Tykke helps!",
     "subtitle": "Clearing the board!"
+  },
+  "tykkeBonus": {
+    "title": "TYKKE BONUS ROUND!",
+    "subtitle": "All scores x3!",
+    "seconds": "seconds",
+    "bonusRound": "Bonus Round"
   }
 }

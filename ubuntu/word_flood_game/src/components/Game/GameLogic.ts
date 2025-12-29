@@ -134,9 +134,16 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     // Earnable power-ups
     powerUps: { nuke: 0, shuffle: 0, timeFreeze: 0 },
     pendingPowerUp: null,
-    // Tykke helper
-    tykkeUsed: false,
+    // Tykke helper - can appear up to 3 times per game
+    tykkeCount: 0,
     tykkeActive: false,
+    lastTykkeTime: null,
+    // Tykke Bonus Round
+    tykkeBonusActive: false,
+    tykkeBonusEndTime: null,
+    tykkeBonusActivating: false,
+    wordsWithFourPlusLetters: 0,
+    tykkeBonusUsed: false,
     // Record tracking
     wordStartTime: null,
     fastestWordMs: null,
@@ -218,12 +225,14 @@ const calculateScore = (wordLetters: Letter[], wordStreak: number): number => {
   const word = wordLetters.map(l => l.char).join("");
   if (word.length < MIN_WORD_LENGTH) return 0;
 
-  // Base score
+  // Base score - more generous for longer words
   let score = word.length;
 
-  // Length bonus for longer words
-  if (word.length >= 6) score += (word.length - 5) * 3; // +3 per letter over 5
-  else if (word.length > 4) score += (word.length - 4) * 2;
+  // Progressive length bonus - encourages longer words
+  if (word.length >= 8) score += (word.length - 7) * 6;      // +6 per letter over 7
+  else if (word.length >= 6) score += (word.length - 5) * 4; // +4 per letter over 5
+  else if (word.length >= 5) score += 3;                      // +3 for 5 letters
+  else if (word.length >= 4) score += 1;                      // +1 for 4 letters
 
   // Special letter multipliers
   let multiplier = 1;
@@ -265,11 +274,17 @@ const calculateScore = (wordLetters: Letter[], wordStreak: number): number => {
     score = Math.floor(score * streakMultiplier);
   }
 
-  // Long word bonus
-  if (word.length >= 8) {
-    score *= 3; // 8+ letters = 3x
+  // Long word multiplier - very rewarding for long words
+  if (word.length >= 10) {
+    score = Math.floor(score * 5); // 10+ letters = 5x (jackpot!)
+  } else if (word.length >= 8) {
+    score = Math.floor(score * 4); // 8-9 letters = 4x
+  } else if (word.length >= 7) {
+    score = Math.floor(score * 3); // 7 letters = 3x
   } else if (word.length >= 6) {
-    score *= 2; // 6-7 letters = 2x
+    score = Math.floor(score * 2.5); // 6 letters = 2.5x
+  } else if (word.length >= 5) {
+    score = Math.floor(score * 1.5); // 5 letters = 1.5x
   }
 
   // Danish special vowels bonus (Æ, Ø, Å)
@@ -531,7 +546,12 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
     ? state.wordStreak + 1
     : 1;
 
-  const wordScore = calculateScore(state.currentWord, newStreak);
+  let wordScore = calculateScore(state.currentWord, newStreak);
+
+  // Apply 3x multiplier during Tykke Bonus Round
+  if (state.tykkeBonusActive && state.tykkeBonusEndTime && now < state.tykkeBonusEndTime) {
+    wordScore = wordScore * 3;
+  }
 
   // Check for earned power-ups based on word length and streak
   const wordLength = submittedWordString.length;
@@ -585,6 +605,27 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
   // Update max streak record
   const newMaxStreak = Math.max(state.maxStreak, newStreak);
 
+  // Check for Tykke trigger word ("MAD" in Danish, "FOOD" in English)
+  // Tykke loves food, so she comes to help when you type these words!
+  const tykkeWord = language === 'da' ? 'MAD' : 'FOOD';
+  const canTriggerTykke = state.tykkeCount < 3 && !state.tykkeActive;
+  const shouldTriggerTykke = canTriggerTykke && wordString === tykkeWord;
+
+  // Track words with 4+ letters for Tykke Bonus Round eligibility
+  const newWordsWithFourPlusLetters = wordLength >= 4
+    ? state.wordsWithFourPlusLetters + 1
+    : state.wordsWithFourPlusLetters;
+
+  // Check if Tykke Bonus Round should activate
+  // Conditions: 3+ words with 4+ letters, not used yet, 50% chance
+  const canTriggerTykkeBonus = !state.tykkeBonusUsed &&
+    !state.tykkeBonusActive &&
+    !state.tykkeBonusActivating &&
+    newWordsWithFourPlusLetters >= 3 &&
+    state.wordsWithFourPlusLetters < 3; // Only on the 3rd qualifying word
+
+  const shouldTriggerTykkeBonus = canTriggerTykkeBonus && Math.random() < 0.5;
+
   return {
     ...state,
     board: newBoard,
@@ -605,6 +646,14 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
     highestWordScore: newHighestWordScore,
     highestScoringWord: newHighestScoringWord,
     maxStreak: newMaxStreak,
+    // Tykke trigger
+    tykkeCount: shouldTriggerTykke ? state.tykkeCount + 1 : state.tykkeCount,
+    tykkeActive: shouldTriggerTykke ? true : state.tykkeActive,
+    lastTykkeTime: shouldTriggerTykke ? now : state.lastTykkeTime,
+    // Tykke Bonus Round tracking
+    wordsWithFourPlusLetters: newWordsWithFourPlusLetters,
+    tykkeBonusActivating: shouldTriggerTykkeBonus,
+    tykkeBonusUsed: shouldTriggerTykkeBonus ? true : state.tykkeBonusUsed,
   };
 };
 
@@ -867,14 +916,15 @@ export const clearPendingPowerUp = (state: GameState): GameState => {
 // TYKKE HELPER FUNCTIONS
 // ============================================
 
-// Activate Tykke - starts the animation
+// Activate Tykke - starts the animation (can be called up to 3 times per game)
 export const activateTykke = (state: GameState): GameState => {
-  if (state.tykkeUsed || state.isGameOver) return state;
+  if (state.tykkeCount >= 3 || state.isGameOver || state.tykkeActive) return state;
 
   return {
     ...state,
-    tykkeUsed: true,
+    tykkeCount: state.tykkeCount + 1,
     tykkeActive: true,
+    lastTykkeTime: Date.now(),
   };
 };
 
@@ -892,4 +942,39 @@ export const completeTykkeHelp = (state: GameState): GameState => {
     tykkeActive: false,
     errorMessage: null,
   };
+};
+
+// ============================================
+// TYKKE BONUS ROUND FUNCTIONS
+// ============================================
+
+// Start Tykke Bonus Round - called after activation overlay is dismissed
+export const startTykkeBonusRound = (state: GameState): GameState => {
+  if (!state.tykkeBonusActivating) return state;
+
+  return {
+    ...state,
+    tykkeBonusActivating: false,
+    tykkeBonusActive: true,
+    tykkeBonusEndTime: Date.now() + 60000, // 60 seconds
+  };
+};
+
+// End Tykke Bonus Round - called when timer expires
+export const endTykkeBonusRound = (state: GameState): GameState => {
+  if (!state.tykkeBonusActive) return state;
+
+  return {
+    ...state,
+    tykkeBonusActive: false,
+    tykkeBonusEndTime: null,
+  };
+};
+
+// Check and update Tykke Bonus Round status
+export const updateTykkeBonusStatus = (state: GameState): GameState => {
+  if (state.tykkeBonusActive && state.tykkeBonusEndTime && Date.now() >= state.tykkeBonusEndTime) {
+    return endTykkeBonusRound(state);
+  }
+  return state;
 };

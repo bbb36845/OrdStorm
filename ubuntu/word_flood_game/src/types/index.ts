@@ -61,9 +61,17 @@ export interface GameState {
   powerUps: PowerUps;
   pendingPowerUp: PowerUpType | null; // Power-up just earned (for animation/notification)
 
-  // Tykke (dog) helper - random event that clears the board once per game
-  tykkeUsed: boolean;
+  // Tykke (dog) helper - can appear up to 3 times per game
+  tykkeCount: number; // Number of times Tykke has appeared (max 3)
   tykkeActive: boolean; // Currently showing Tykke animation
+  lastTykkeTime: number | null; // Timestamp of last Tykke appearance (for 3-min cooldown)
+
+  // Tykke Bonus Round - 3x score multiplier for 60 seconds
+  tykkeBonusActive: boolean; // Currently in bonus round
+  tykkeBonusEndTime: number | null; // Timestamp when bonus round ends
+  tykkeBonusActivating: boolean; // Showing activation overlay
+  wordsWithFourPlusLetters: number; // Count of words with 4+ letters (for bonus eligibility)
+  tykkeBonusUsed: boolean; // Whether bonus round has been used this game (only once per game)
 
   // Record tracking for leaderboards
   wordStartTime: number | null; // Timestamp when first letter was clicked

@@ -6,6 +6,8 @@ import HowToPlayModal from "./components/Game/HowToPlayModal";
 import WildCardPicker from "./components/Game/WildCardPicker";
 import PowerUpBar from "./components/Game/PowerUpBar";
 import TykkeOverlay from "./components/Game/TykkeOverlay";
+import TykkeBonusOverlay from "./components/Game/TykkeBonusOverlay";
+import TykkeBonusTimer from "./components/Game/TykkeBonusTimer";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
 import RecordsLeaderboard from "./components/Game/RecordsLeaderboard";
@@ -30,6 +32,8 @@ import {
   clearPendingPowerUp as logicClearPendingPowerUp,
   activateTykke as logicActivateTykke,
   completeTykkeHelp as logicCompleteTykkeHelp,
+  startTykkeBonusRound as logicStartTykkeBonusRound,
+  updateTykkeBonusStatus as logicUpdateTykkeBonusStatus,
   getDisplayWordString,
   initializeWordList
 } from "./components/Game/GameLogic";
@@ -559,10 +563,22 @@ const AppContent: React.FC = () => {
     return () => clearInterval(freezeCheckInterval);
   }, [gameState.isFrozen]);
 
-  // Tykke random helper - triggers once per game when board is getting full
-  // When board is 50-80% full, with a small random chance
+  // Tykke random helper - can trigger up to 3 times per game
+  // Conditions: 85%+ board fill, 3-minute cooldown, 75% probability
   useEffect(() => {
-    if (!gameStarted || gameState.isGameOver || gameState.tykkeUsed || gameState.tykkeActive) {
+    // Check basic conditions
+    if (!gameStarted || gameState.isGameOver || gameState.tykkeActive) {
+      return;
+    }
+
+    // Max 3 appearances per game
+    if (gameState.tykkeCount >= 3) {
+      return;
+    }
+
+    // 3-minute cooldown between appearances (180000 ms)
+    const TYKKE_COOLDOWN = 180000;
+    if (gameState.lastTykkeTime && Date.now() - gameState.lastTykkeTime < TYKKE_COOLDOWN) {
       return;
     }
 
@@ -579,21 +595,35 @@ const AppContent: React.FC = () => {
 
     const fillPercentage = filledCells / totalCells;
 
-    // Trigger when board is 50-85% full with increasing probability
-    // This gives Tykke a chance to save the player when things get dire
-    if (fillPercentage >= 0.5 && fillPercentage <= 0.85) {
-      // Higher probability as board fills up: 5% at 50%, up to 15% at 85%
-      const baseProbability = 0.05 + (fillPercentage - 0.5) * 0.286;
-      if (Math.random() < baseProbability) {
+    // Only trigger when board is 85%+ full
+    if (fillPercentage >= 0.85) {
+      // 75% probability when conditions are met
+      if (Math.random() < 0.75) {
         setGameState(prevState => logicActivateTykke(prevState));
       }
     }
-  }, [gameStarted, gameState.board, gameState.isGameOver, gameState.tykkeUsed, gameState.tykkeActive, gameState.boardSize]);
+  }, [gameStarted, gameState.board, gameState.isGameOver, gameState.tykkeCount, gameState.tykkeActive, gameState.lastTykkeTime, gameState.boardSize]);
 
   // Handle Tykke animation completion
   const handleTykkeComplete = useCallback(() => {
     setGameState(prevState => logicCompleteTykkeHelp(prevState));
   }, []);
+
+  // Handle Tykke Bonus Round activation completion
+  const handleTykkeBonusActivationComplete = useCallback(() => {
+    setGameState(prevState => logicStartTykkeBonusRound(prevState));
+  }, []);
+
+  // Check Tykke Bonus Round status (timer expiry)
+  useEffect(() => {
+    if (!gameState.tykkeBonusActive) return;
+
+    const bonusCheckInterval = setInterval(() => {
+      setGameState(prevState => logicUpdateTykkeBonusStatus(prevState));
+    }, 100);
+
+    return () => clearInterval(bonusCheckInterval);
+  }, [gameState.tykkeBonusActive]);
 
   // Handle start game
   const handleStartGame = useCallback(() => {
@@ -1036,6 +1066,18 @@ const AppContent: React.FC = () => {
       <TykkeOverlay
         isActive={gameState.tykkeActive}
         onAnimationComplete={handleTykkeComplete}
+      />
+
+      {/* Tykke Bonus Round Overlay */}
+      <TykkeBonusOverlay
+        isActive={gameState.tykkeBonusActivating}
+        onAnimationComplete={handleTykkeBonusActivationComplete}
+      />
+
+      {/* Tykke Bonus Round Timer */}
+      <TykkeBonusTimer
+        isActive={gameState.tykkeBonusActive}
+        endTime={gameState.tykkeBonusEndTime}
       />
 
       {/* Username Modal */}
