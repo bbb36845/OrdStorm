@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../SupabaseClient';
 import { Loader2, AlertTriangle, Trophy, RefreshCw, Crown, Medal, Award, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface ProfileData {
   username: string | null;
@@ -104,7 +104,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, language = 'da
 
       if (fetchError) {
         console.error("Error fetching scores:", fetchError);
-        throw new Error(t('leaderboard.couldNotLoad', 'Could not load leaderboard'));
+        throw new Error('Could not load leaderboard');
       }
       setScores((data as LeaderboardEntry[]) || []);
 
@@ -112,14 +112,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, language = 'da
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError(t('leaderboard.unknownError', "An unknown error occurred while fetching leaderboard."));
+        setError("An unknown error occurred while fetching leaderboard.");
       }
       console.error(err);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [language, selectedPeriod, t]);
+  }, [language, selectedPeriod]);
 
   useEffect(() => {
     fetchLeaderboardData();
@@ -146,7 +146,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, language = 'da
     }
   };
 
-  const getPeriodSubtitle = (): string => {
+  const periodSubtitle = useMemo((): string => {
     const now = new Date();
     const locale = language === 'da' ? 'da-DK' : 'en-US';
 
@@ -166,7 +166,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, language = 'da
       case 'allTime':
         return '';
     }
-  };
+  }, [selectedPeriod, language]);
 
   if (error) {
     return (
@@ -261,9 +261,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, language = 'da
       </div>
 
       {/* Period subtitle */}
-      {getPeriodSubtitle() && (
+      {periodSubtitle && (
         <div className="text-center text-xs text-gray-400 font-medium mb-3">
-          {getPeriodSubtitle()}
+          {periodSubtitle}
         </div>
       )}
 
@@ -284,54 +284,50 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, language = 'da
             </div>
           ) : (
             <div className="space-y-2">
-              <AnimatePresence mode="popLayout">
-                {scores.map((entry, index) => {
-                  const isCurrentUser = currentUserId && entry.user_id === currentUserId;
-                  const displayName = getDisplayName(entry);
+              {scores.map((entry, index) => {
+                const isCurrentUser = currentUserId && entry.user_id === currentUserId;
+                const displayName = getDisplayName(entry);
 
-                  return (
-                    <motion.div
-                      key={entry.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 10 }}
-                      transition={{ delay: index * 0.03, type: "spring", stiffness: 300, damping: 25 }}
-                      whileHover={{ scale: 1.02, x: 4 }}
-                      className={`
-                        flex items-center justify-between p-3 rounded-xl
-                        transition-all duration-200 cursor-default
-                        ${isCurrentUser
-                          ? 'bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-2 border-sky-200 shadow-md'
-                          : index < 3
-                            ? 'bg-gradient-to-r from-white to-gray-50 border border-gray-100 shadow-sm'
-                            : 'bg-white/70 border border-gray-100 hover:bg-white hover:shadow-sm'}
-                      `}
-                    >
-                      <div className="flex items-center gap-3">
-                        {getRankBadge(index)}
-                        <div className="flex flex-col">
-                          <span className={`font-semibold ${isCurrentUser ? 'text-sky-700' : 'text-gray-700'} ${index < 3 ? 'text-base' : 'text-sm'}`}>
-                            {displayName}
-                          </span>
-                          {isCurrentUser && (
-                            <span className="text-xs text-sky-500">{t('leaderboard.you', 'You')}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className={`
-                          font-bold
-                          ${isCurrentUser ? 'text-indigo-600' : index === 0 ? 'text-yellow-600' : 'text-gray-800'}
-                          ${index < 3 ? 'text-xl' : 'text-lg'}
-                        `}>
-                          {entry.score.toLocaleString(language === 'da' ? 'da-DK' : 'en-US')}
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03, type: "spring", stiffness: 300, damping: 25 }}
+                    className={`
+                      flex items-center justify-between p-3 rounded-xl
+                      transition-all duration-200 cursor-default
+                      ${isCurrentUser
+                        ? 'bg-gradient-to-r from-sky-50 via-indigo-50 to-purple-50 border-2 border-sky-200 shadow-md'
+                        : index < 3
+                          ? 'bg-gradient-to-r from-white to-gray-50 border border-gray-100 shadow-sm'
+                          : 'bg-white/70 border border-gray-100 hover:bg-white hover:shadow-sm'}
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      {getRankBadge(index)}
+                      <div className="flex flex-col">
+                        <span className={`font-semibold ${isCurrentUser ? 'text-sky-700' : 'text-gray-700'} ${index < 3 ? 'text-base' : 'text-sm'}`}>
+                          {displayName}
                         </span>
-                        <span className="text-xs text-gray-400 ml-1">{t('leaderboard.points')}</span>
+                        {isCurrentUser && (
+                          <span className="text-xs text-sky-500">{t('leaderboard.you', 'You')}</span>
+                        )}
                       </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                    </div>
+                    <div className="text-right">
+                      <span className={`
+                        font-bold
+                        ${isCurrentUser ? 'text-indigo-600' : index === 0 ? 'text-yellow-600' : 'text-gray-800'}
+                        ${index < 3 ? 'text-xl' : 'text-lg'}
+                      `}>
+                        {entry.score.toLocaleString(language === 'da' ? 'da-DK' : 'en-US')}
+                      </span>
+                      <span className="text-xs text-gray-400 ml-1">{t('leaderboard.points')}</span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -340,4 +336,4 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ currentUserId, language = 'da
   );
 };
 
-export default Leaderboard;
+export default memo(Leaderboard);

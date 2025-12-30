@@ -548,33 +548,34 @@ const AppContent: React.FC = () => {
     setScoreToSave(null);
   }, []);
 
-  // Game loop - add letters (only when game has started)
+  // Game loop - add letters (only when game has started and not during Tykke events)
   useEffect(() => {
-    if (!gameStarted || gameState.isGameOver || gameState.isWordListLoading) {
+    // Pause game during Tykke helper and bonus activation overlays
+    if (!gameStarted || gameState.isGameOver || gameState.isWordListLoading || gameState.tykkeActive || gameState.tykkeBonusActivating) {
       return;
     }
     const addLetterInterval = setInterval(() => {
       setGameState(prevState => {
-        if (prevState.isGameOver) return prevState;
+        if (prevState.isGameOver || prevState.tykkeActive || prevState.tykkeBonusActivating) return prevState;
         return logicAddLetterToBoard(prevState, language);
       });
     }, 1440); // 1.44 seconds between letters (20% slower than before)
     return () => clearInterval(addLetterInterval);
-  }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, language]);
+  }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, gameState.tykkeActive, gameState.tykkeBonusActivating, language]);
 
-  // Ticking bomb update loop - every 500ms to update bomb timers
+  // Ticking bomb update loop - every 500ms to update bomb timers (paused during Tykke events)
   useEffect(() => {
-    if (gameState.isGameOver) return;
+    if (gameState.isGameOver || gameState.tykkeActive || gameState.tykkeBonusActivating) return;
 
     const tickingBombInterval = setInterval(() => {
       setGameState(prevState => {
-        if (prevState.isGameOver) return prevState;
+        if (prevState.isGameOver || prevState.tykkeActive || prevState.tykkeBonusActivating) return prevState;
         return logicUpdateTickingBombs(prevState, language);
       });
     }, 500);
 
     return () => clearInterval(tickingBombInterval);
-  }, [gameState.isGameOver, language]);
+  }, [gameState.isGameOver, gameState.tykkeActive, gameState.tykkeBonusActivating, language]);
 
   // Freeze timer update - check if freeze should end
   useEffect(() => {
