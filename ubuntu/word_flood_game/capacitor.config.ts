@@ -9,6 +9,11 @@ const config: CapacitorConfig = {
     backgroundColor: '#6366f1',
     preferredContentMode: 'mobile'
   },
+  android: {
+    backgroundColor: '#6366f1',
+    allowMixedContent: false,
+    useLegacyBridge: false
+  },
   server: {
     // For development - comment out for production
     // url: 'http://localhost:5173',

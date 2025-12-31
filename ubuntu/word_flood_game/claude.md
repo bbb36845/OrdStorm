@@ -119,6 +119,38 @@ npx cap open ios
 3. Fill in App Store listing (screenshots, description, keywords)
 4. Submit for review
 
+## Android App (Capacitor)
+
+The app is configured for Android using Capacitor. To build and run:
+
+```bash
+# Build web assets
+pnpm build
+
+# Sync to Android project
+npx cap sync android
+
+# Open in Android Studio
+npx cap open android
+```
+
+### Android Configuration
+- **Package ID**: `app.letsword.game`
+- **App Name**: LetsWord
+- **Android Studio Project**: `android/`
+
+### Requirements for Android Development
+- Android Studio installed
+- Android SDK (API level 22+ recommended)
+- Google Play Developer Account ($25 one-time) for Play Store submission
+
+### Google Play Submission Checklist
+1. Generate signed AAB in Android Studio (Build > Generate Signed Bundle)
+2. Create app in Google Play Console
+3. Fill in store listing (screenshots, description, feature graphic)
+4. Complete Data Safety form
+5. Submit for review
+
 ## Language
 
 - **Frontend UI**: Danish (Dansk)

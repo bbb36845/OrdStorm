@@ -44,3 +44,9 @@ coverage/
 # ios/App/build/
 ios/App/App/public/
 ios/capacitor-cordova-ios-plugins/
+
+# Capacitor Android (keep in repo for collaboration)
+android/app/src/main/assets/public/
+android/.gradle/
+android/app/build/
+android/capacitor-cordova-android-plugins/

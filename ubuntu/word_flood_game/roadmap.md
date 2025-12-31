@@ -288,10 +288,10 @@ OrdStorm er et dansk ordspil hvor spillere danner ord fra tilfældigt placerede 
 
 ### 8.2 Android App (Google Play Store)
 
-**Setup**
-- [ ] Add Android platform (`npx cap add android`)
-- [ ] Configure app icon for Android (adaptive icons)
-- [ ] Update capacitor.config.ts with Android settings
+**Setup (DONE)**
+- [x] Add Android platform (`npx cap add android`)
+- [x] Configure app icon for Android (adaptive icons)
+- [x] Update capacitor.config.ts with Android settings
 - [ ] Configure splash screen
 
 **Development & Testing**

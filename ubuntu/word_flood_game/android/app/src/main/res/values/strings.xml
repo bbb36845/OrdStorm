@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LetsWord</string>
+    <string name="title_activity_main">LetsWord</string>
+    <string name="package_name">app.letsword.game</string>
+    <string name="custom_url_scheme">app.letsword.game</string>
+</resources>
