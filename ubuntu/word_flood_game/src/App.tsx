@@ -429,9 +429,13 @@ const AppContent: React.FC = () => {
     (letter: Letter) => {
       if (gameState.isGameOver || gameState.isLoading || gameState.isWordListLoading) return;
 
-      // Check if this letter is already in the current word
+      // Check if this letter is already in the current word - if so, let GameLogic handle de-selection
       const alreadySelected = gameState.currentWord.find(l => l.id === letter.id);
-      if (alreadySelected) return;
+      if (alreadySelected) {
+        // De-select the letter (and any letters after it in the sequence)
+        setGameState((prevState) => logicHandleLetterClick(prevState, letter));
+        return;
+      }
 
       // If it's a wild card, show the letter picker
       if (letter.letterType === 'wild') {

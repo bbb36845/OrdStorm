@@ -179,10 +179,10 @@
 }
 
 .letter-tile-selected {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   box-shadow:
-    0 0 0 3px rgba(251, 191, 36, 0.5),
-    0 10px 20px -5px rgba(245, 158, 11, 0.4),
+    0 0 0 3px rgba(99, 102, 241, 0.5),
+    0 10px 20px -5px rgba(79, 70, 229, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
