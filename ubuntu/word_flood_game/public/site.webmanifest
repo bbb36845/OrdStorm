@@ -1,21 +1,40 @@
 {
-  "name": "LetsWord",
+  "name": "LetsWord - Dansk Ordspil & English Word Game",
   "short_name": "LetsWord",
-  "description": "Word puzzle game - form words before the board fills up!",
+  "description": "Gratis ordspil - dan ord fra faldende bogstaver! Free word puzzle game - form words before the board fills up! Available in Danish and English.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f0f4ff",
   "theme_color": "#6366f1",
+  "lang": "da",
+  "dir": "ltr",
+  "categories": ["games", "education", "entertainment"],
   "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/favicon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/favicon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }

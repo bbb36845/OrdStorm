@@ -1,0 +1,21 @@
+# robots.txt for LetsWord
+# https://letsword.app
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://letsword.app/sitemap.xml
+
+# Crawl-delay (optional, for polite crawling)
+Crawl-delay: 1
+
+# Block common non-essential paths
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /assets/*.map
+
+# Allow important resources
+Allow: /og-image.png
+Allow: /favicon*.png
+Allow: /apple-touch-icon.png
