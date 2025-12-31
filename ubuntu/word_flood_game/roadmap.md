@@ -241,18 +241,99 @@ OrdStorm er et dansk ordspil hvor spillere danner ord fra tilfældigt placerede 
 
 ---
 
-## Phase 8: Mobile App
+## Phase 8: Mobile Apps (Capacitor)
 
-### 8.1 iOS App
-- [ ] React Native or Capacitor wrapper
-- [ ] App Store submission
-- [ ] Push notifications
-- [ ] Offline mode with sync
+### 8.1 iOS App (Apple App Store)
 
-### 8.2 Android App
-- [ ] Google Play submission
-- [ ] Android-specific optimizations
-- [ ] Push notifications
+**Setup (DONE)**
+- [x] Install Capacitor (@capacitor/core, @capacitor/ios, @capacitor/cli)
+- [x] Initialize Capacitor with bundle ID `app.letsword.game`
+- [x] Add iOS platform (`npx cap add ios`)
+- [x] Configure app icon (1024x1024)
+- [x] Update capacitor.config.ts with iOS settings
+
+**Development & Testing**
+- [ ] Test on iOS Simulator
+- [ ] Test on physical iPhone device
+- [ ] Handle safe area insets (notch, home indicator)
+- [ ] Test all game features on iOS
+- [ ] Optimize touch interactions for iOS
+
+**App Store Submission**
+- [ ] Create Apple Developer Account ($99/year)
+- [ ] Create App ID in Apple Developer Portal
+- [ ] Create app in App Store Connect
+- [ ] Prepare App Store listing:
+  - [ ] App name: LetsWord
+  - [ ] Subtitle (30 chars): Dansk Ordspil / Word Game
+  - [ ] Description (Danish & English)
+  - [ ] Keywords (100 chars max)
+  - [ ] Screenshots (6.7", 6.5", 5.5" iPhones + iPad)
+  - [ ] App preview video (optional)
+  - [ ] App icon (1024x1024, no transparency)
+  - [ ] Privacy policy URL
+  - [ ] Support URL
+  - [ ] Category: Games > Word
+  - [ ] Age rating questionnaire
+- [ ] Archive and upload build from Xcode
+- [ ] Submit for App Review (typically 1-3 days)
+- [ ] Address any review feedback
+- [ ] Release to App Store
+
+**Post-Launch iOS**
+- [ ] Push notifications setup
+- [ ] App Store Optimization (ASO)
+- [ ] Monitor crash reports
+- [ ] Respond to user reviews
+
+### 8.2 Android App (Google Play Store)
+
+**Setup**
+- [ ] Add Android platform (`npx cap add android`)
+- [ ] Configure app icon for Android (adaptive icons)
+- [ ] Update capacitor.config.ts with Android settings
+- [ ] Configure splash screen
+
+**Development & Testing**
+- [ ] Test on Android Emulator
+- [ ] Test on physical Android device
+- [ ] Handle different screen sizes
+- [ ] Test all game features on Android
+- [ ] Handle Android back button behavior
+
+**Google Play Submission**
+- [ ] Create Google Play Developer Account ($25 one-time)
+- [ ] Create app in Google Play Console
+- [ ] Prepare Play Store listing:
+  - [ ] App name: LetsWord
+  - [ ] Short description (80 chars)
+  - [ ] Full description (4000 chars, Danish & English)
+  - [ ] Screenshots (phone & tablet, 7" and 10")
+  - [ ] Feature graphic (1024x500)
+  - [ ] App icon (512x512)
+  - [ ] Privacy policy URL
+  - [ ] Category: Games > Word
+  - [ ] Content rating questionnaire
+  - [ ] Target audience and content
+- [ ] Generate signed AAB (Android App Bundle)
+- [ ] Upload to Play Console
+- [ ] Complete Data Safety form
+- [ ] Submit for review (typically 1-3 days)
+- [ ] Release to Google Play
+
+**Post-Launch Android**
+- [ ] Push notifications setup (Firebase Cloud Messaging)
+- [ ] Play Store Optimization
+- [ ] Monitor Android Vitals
+- [ ] Respond to user reviews
+
+### 8.3 Shared Mobile Features
+- [ ] Offline mode with data sync
+- [ ] Deep linking support
+- [ ] Share functionality (native share sheet)
+- [ ] Haptic feedback
+- [ ] App rating prompts (after X games)
+- [ ] In-app updates (Android)
 
 ---
 
