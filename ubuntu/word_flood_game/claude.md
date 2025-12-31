@@ -88,6 +88,37 @@ pnpm lint
 pnpm preview
 ```
 
+## iOS App (Capacitor)
+
+The app is configured for iOS using Capacitor. To build and run:
+
+```bash
+# Build web assets
+pnpm build
+
+# Sync to iOS project
+npx cap sync ios
+
+# Open in Xcode
+npx cap open ios
+```
+
+### iOS Configuration
+- **Bundle ID**: `app.letsword.game`
+- **App Name**: LetsWord
+- **Xcode Project**: `ios/App/App.xcworkspace`
+
+### Requirements for iOS Development
+- Mac with Xcode installed
+- Apple Developer Account ($99/year) for App Store submission
+- CocoaPods (install with `sudo gem install cocoapods`)
+
+### App Store Submission Checklist
+1. Build the app in Xcode (Product > Archive)
+2. Upload to App Store Connect
+3. Fill in App Store listing (screenshots, description, keywords)
+4. Submit for review
+
 ## Language
 
 - **Frontend UI**: Danish (Dansk)
