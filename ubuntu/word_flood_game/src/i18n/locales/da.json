@@ -135,5 +135,11 @@
     "subtitle": "Alle scores x3!",
     "seconds": "sekunder",
     "bonusRound": "Bonus Runde"
+  },
+  "tykkeRelax": {
+    "title": "Tykke hjælper!",
+    "subtitle": "Hvil poterne",
+    "seconds": "sekunder",
+    "relaxMode": "Slap af"
   }
 }

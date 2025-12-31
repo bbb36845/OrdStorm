@@ -145,6 +145,12 @@ export const initializeGameState = (rows: number, cols: number): GameState => {
     consecutiveFourPlusWords: 0,
     tykkeBonusCount: 0,
     lastTykkeBonusTime: null,
+    // Tykke Relax - slows down game at word milestones
+    tykkeRelaxActive: false,
+    tykkeRelaxEndTime: null,
+    tykkeRelaxActivating: false,
+    tykkeRelaxCount: 0,
+    tykkeRelaxMilestones: [],
     // Record tracking
     wordStartTime: null,
     fastestWordMs: null,
@@ -634,6 +640,18 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
 
   const shouldTriggerTykkeBonus = canTriggerTykkeBonus && Math.random() < 0.5;
 
+  // Check for Tykke Relax milestone triggers (20, 50, 100 words)
+  const TYKKE_RELAX_MILESTONES = [20, 50, 100];
+  const newWordCount = state.foundWords.length + 1; // Including the word being submitted
+  const hitMilestone = TYKKE_RELAX_MILESTONES.find(m =>
+    newWordCount === m && !state.tykkeRelaxMilestones.includes(m)
+  );
+  const canTriggerTykkeRelax = hitMilestone !== undefined &&
+    state.tykkeRelaxCount < 3 &&
+    !state.tykkeRelaxActive &&
+    !state.tykkeRelaxActivating;
+  const shouldTriggerTykkeRelax = canTriggerTykkeRelax;
+
   return {
     ...state,
     board: newBoard,
@@ -663,6 +681,12 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
     tykkeBonusActivating: shouldTriggerTykkeBonus,
     tykkeBonusCount: shouldTriggerTykkeBonus ? state.tykkeBonusCount + 1 : state.tykkeBonusCount,
     lastTykkeBonusTime: shouldTriggerTykkeBonus ? now : state.lastTykkeBonusTime,
+    // Tykke Relax tracking
+    tykkeRelaxActivating: shouldTriggerTykkeRelax,
+    tykkeRelaxCount: shouldTriggerTykkeRelax ? state.tykkeRelaxCount + 1 : state.tykkeRelaxCount,
+    tykkeRelaxMilestones: shouldTriggerTykkeRelax && hitMilestone
+      ? [...state.tykkeRelaxMilestones, hitMilestone]
+      : state.tykkeRelaxMilestones,
   };
 };
 
@@ -984,6 +1008,37 @@ export const endTykkeBonusRound = (state: GameState): GameState => {
 export const updateTykkeBonusStatus = (state: GameState): GameState => {
   if (state.tykkeBonusActive && state.tykkeBonusEndTime && Date.now() >= state.tykkeBonusEndTime) {
     return endTykkeBonusRound(state);
+  }
+  return state;
+};
+
+// Start Tykke Relax - called after activation overlay is dismissed
+export const startTykkeRelax = (state: GameState): GameState => {
+  if (!state.tykkeRelaxActivating) return state;
+
+  return {
+    ...state,
+    tykkeRelaxActivating: false,
+    tykkeRelaxActive: true,
+    tykkeRelaxEndTime: Date.now() + 60000, // 60 seconds
+  };
+};
+
+// End Tykke Relax - called when timer expires
+export const endTykkeRelax = (state: GameState): GameState => {
+  if (!state.tykkeRelaxActive) return state;
+
+  return {
+    ...state,
+    tykkeRelaxActive: false,
+    tykkeRelaxEndTime: null,
+  };
+};
+
+// Check and update Tykke Relax status
+export const updateTykkeRelaxStatus = (state: GameState): GameState => {
+  if (state.tykkeRelaxActive && state.tykkeRelaxEndTime && Date.now() >= state.tykkeRelaxEndTime) {
+    return endTykkeRelax(state);
   }
   return state;
 };

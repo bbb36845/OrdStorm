@@ -74,6 +74,13 @@ export interface GameState {
   tykkeBonusCount: number; // Number of times bonus round has been used (max 3)
   lastTykkeBonusTime: number | null; // Timestamp of last bonus round (for 3-min cooldown)
 
+  // Tykke Relax - slows down game for 60 seconds at word milestones (20, 50, 100 words)
+  tykkeRelaxActive: boolean; // Currently in relax mode (slower letter spawn)
+  tykkeRelaxEndTime: number | null; // Timestamp when relax mode ends
+  tykkeRelaxActivating: boolean; // Showing activation overlay
+  tykkeRelaxCount: number; // Number of times relax has been triggered (max 3)
+  tykkeRelaxMilestones: number[]; // Milestones already triggered
+
   // Record tracking for leaderboards
   wordStartTime: number | null; // Timestamp when first letter was clicked
   fastestWordMs: number | null; // Fastest word typed this game (milliseconds)

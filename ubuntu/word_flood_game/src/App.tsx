@@ -8,6 +8,8 @@ import PowerUpBar from "./components/Game/PowerUpBar";
 import TykkeOverlay from "./components/Game/TykkeOverlay";
 import TykkeBonusOverlay from "./components/Game/TykkeBonusOverlay";
 import TykkeBonusTimer from "./components/Game/TykkeBonusTimer";
+import TykkeRelaxOverlay from "./components/Game/TykkeRelaxOverlay";
+import TykkeRelaxTimer from "./components/Game/TykkeRelaxTimer";
 import WordScorePopup from "./components/Game/WordScorePopup";
 import UsernameForm from "./components/Auth/UsernameForm";
 import Leaderboard from "./components/Game/Leaderboard";
@@ -35,6 +37,8 @@ import {
   completeTykkeHelp as logicCompleteTykkeHelp,
   startTykkeBonusRound as logicStartTykkeBonusRound,
   updateTykkeBonusStatus as logicUpdateTykkeBonusStatus,
+  startTykkeRelax as logicStartTykkeRelax,
+  updateTykkeRelaxStatus as logicUpdateTykkeRelaxStatus,
   getDisplayWordString,
   initializeWordList
 } from "./components/Game/GameLogic";
@@ -554,32 +558,34 @@ const AppContent: React.FC = () => {
 
   // Game loop - add letters (only when game has started and not during Tykke events)
   useEffect(() => {
-    // Pause game during Tykke helper and bonus activation overlays
-    if (!gameStarted || gameState.isGameOver || gameState.isWordListLoading || gameState.tykkeActive || gameState.tykkeBonusActivating) {
+    // Pause game during Tykke helper, bonus activation, and relax activation overlays
+    if (!gameStarted || gameState.isGameOver || gameState.isWordListLoading || gameState.tykkeActive || gameState.tykkeBonusActivating || gameState.tykkeRelaxActivating) {
       return;
     }
+    // Slower interval during Tykke Relax mode (2x slower: 2880ms vs 1440ms)
+    const interval = gameState.tykkeRelaxActive ? 2880 : 1440;
     const addLetterInterval = setInterval(() => {
       setGameState(prevState => {
-        if (prevState.isGameOver || prevState.tykkeActive || prevState.tykkeBonusActivating) return prevState;
+        if (prevState.isGameOver || prevState.tykkeActive || prevState.tykkeBonusActivating || prevState.tykkeRelaxActivating) return prevState;
         return logicAddLetterToBoard(prevState, language);
       });
-    }, 1440); // 1.44 seconds between letters (20% slower than before)
+    }, interval);
     return () => clearInterval(addLetterInterval);
-  }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, gameState.tykkeActive, gameState.tykkeBonusActivating, language]);
+  }, [gameStarted, gameState.isGameOver, gameState.isWordListLoading, gameState.tykkeActive, gameState.tykkeBonusActivating, gameState.tykkeRelaxActivating, gameState.tykkeRelaxActive, language]);
 
   // Ticking bomb update loop - every 500ms to update bomb timers (paused during Tykke events)
   useEffect(() => {
-    if (gameState.isGameOver || gameState.tykkeActive || gameState.tykkeBonusActivating) return;
+    if (gameState.isGameOver || gameState.tykkeActive || gameState.tykkeBonusActivating || gameState.tykkeRelaxActivating) return;
 
     const tickingBombInterval = setInterval(() => {
       setGameState(prevState => {
-        if (prevState.isGameOver || prevState.tykkeActive || prevState.tykkeBonusActivating) return prevState;
+        if (prevState.isGameOver || prevState.tykkeActive || prevState.tykkeBonusActivating || prevState.tykkeRelaxActivating) return prevState;
         return logicUpdateTickingBombs(prevState, language);
       });
     }, 500);
 
     return () => clearInterval(tickingBombInterval);
-  }, [gameState.isGameOver, gameState.tykkeActive, gameState.tykkeBonusActivating, language]);
+  }, [gameState.isGameOver, gameState.tykkeActive, gameState.tykkeBonusActivating, gameState.tykkeRelaxActivating, language]);
 
   // Freeze timer update - check if freeze should end
   useEffect(() => {
@@ -653,6 +659,22 @@ const AppContent: React.FC = () => {
 
     return () => clearInterval(bonusCheckInterval);
   }, [gameState.tykkeBonusActive]);
+
+  // Handle Tykke Relax activation completion
+  const handleTykkeRelaxActivationComplete = useCallback(() => {
+    setGameState(prevState => logicStartTykkeRelax(prevState));
+  }, []);
+
+  // Check Tykke Relax status (timer expiry)
+  useEffect(() => {
+    if (!gameState.tykkeRelaxActive) return;
+
+    const relaxCheckInterval = setInterval(() => {
+      setGameState(prevState => logicUpdateTykkeRelaxStatus(prevState));
+    }, 100);
+
+    return () => clearInterval(relaxCheckInterval);
+  }, [gameState.tykkeRelaxActive]);
 
   // Handle start game
   const handleStartGame = useCallback(() => {
@@ -1119,6 +1141,18 @@ const AppContent: React.FC = () => {
       <TykkeBonusTimer
         isActive={gameState.tykkeBonusActive}
         endTime={gameState.tykkeBonusEndTime}
+      />
+
+      {/* Tykke Relax Overlay */}
+      <TykkeRelaxOverlay
+        isActive={gameState.tykkeRelaxActivating}
+        onAnimationComplete={handleTykkeRelaxActivationComplete}
+      />
+
+      {/* Tykke Relax Timer */}
+      <TykkeRelaxTimer
+        isActive={gameState.tykkeRelaxActive}
+        endTime={gameState.tykkeRelaxEndTime}
       />
 
       {/* Username Modal */}
