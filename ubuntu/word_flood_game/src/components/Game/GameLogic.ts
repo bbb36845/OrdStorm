@@ -559,14 +559,17 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
   const earnedPowerUps = { ...state.powerUps };
   let pendingPowerUp: PowerUpType | null = null;
 
+  // Power-up caps
+  const MAX_TIME_FREEZE = 10;
+
   // Word length rewards (only award one per word, prioritize rarest)
-  if (wordLength >= 7) {
+  if (wordLength >= 8) {
     earnedPowerUps.nuke += 1;
     pendingPowerUp = 'nuke';
-  } else if (wordLength >= 6) {
+  } else if (wordLength >= 7) {
     earnedPowerUps.shuffle += 1;
     pendingPowerUp = 'shuffle';
-  } else if (wordLength >= 5) {
+  } else if (wordLength >= 6 && earnedPowerUps.timeFreeze < MAX_TIME_FREEZE) {
     earnedPowerUps.timeFreeze += 1;
     pendingPowerUp = 'timeFreeze';
   }
@@ -575,10 +578,10 @@ export const submitWord = async (state: GameState, options: SubmitWordOptions = 
   if (newStreak === 10) {
     earnedPowerUps.nuke += 1;
     pendingPowerUp = 'nuke'; // Override to show the best reward
-  } else if (newStreak === 5) {
+  } else if (newStreak === 7) {
     earnedPowerUps.shuffle += 1;
     if (!pendingPowerUp) pendingPowerUp = 'shuffle';
-  } else if (newStreak === 3) {
+  } else if (newStreak === 5 && earnedPowerUps.timeFreeze < MAX_TIME_FREEZE) {
     earnedPowerUps.timeFreeze += 1;
     if (!pendingPowerUp) pendingPowerUp = 'timeFreeze';
   }
