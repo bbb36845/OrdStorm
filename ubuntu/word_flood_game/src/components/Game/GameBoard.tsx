@@ -121,7 +121,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord
 
   return (
     <div
-      className={`game-board grid grid-cols-6 gap-2 sm:gap-2.5 p-3 sm:p-4 rounded-2xl relative ${isFrozen ? 'ring-4 ring-cyan-400 ring-opacity-50' : ''}`}
+      className={`game-board grid grid-cols-6 gap-1.5 sm:gap-2 lg:gap-2.5 p-2 sm:p-3 lg:p-4 rounded-2xl relative flex-shrink-0 ${isFrozen ? 'ring-4 ring-cyan-400 ring-opacity-50' : ''}`}
       style={{ touchAction: 'manipulation', WebkitUserSelect: 'none', userSelect: 'none' }}
     >
       {/* Freeze overlay - simplified animation */}
@@ -155,8 +155,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ board, onLetterClick, currentWord
                 onTouchEnd={(e) => letter && handleTouchEnd(letter, e)}
                 onClick={(e) => letter && handleClick(letter, e)}
                 className={`
-                  aspect-square rounded-xl flex items-center justify-center
-                  text-xl sm:text-2xl font-bold uppercase cursor-pointer
+                  aspect-square rounded-lg sm:rounded-xl flex items-center justify-center
+                  text-base sm:text-xl lg:text-2xl font-bold uppercase cursor-pointer
                   relative overflow-hidden
                   ${letter
                     ? getLetterTypeStyles(letterType, selected)

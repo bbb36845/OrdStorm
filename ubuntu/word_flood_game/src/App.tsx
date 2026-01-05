@@ -728,7 +728,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen animated-gradient-bg p-4 font-sans antialiased relative overflow-hidden">
+    <div className="flex flex-col items-center h-screen animated-gradient-bg p-2 sm:p-4 font-sans antialiased relative overflow-hidden">
       {/* Static background decorations - hidden on mobile for performance */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
         <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
@@ -737,7 +737,7 @@ const AppContent: React.FC = () => {
       </div>
 
       {/* Header */}
-      <header className="w-full max-w-4xl mb-4 sm:mb-6 flex justify-between items-center relative z-10">
+      <header className="w-full max-w-4xl mb-2 sm:mb-4 flex justify-between items-center relative z-10 flex-shrink-0">
         <div className="flex items-center gap-1 sm:gap-2">
           <Zap className="w-5 h-5 sm:w-8 sm:h-8 text-yellow-300 drop-shadow-lg" />
           <h1 className="text-xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
@@ -773,9 +773,9 @@ const AppContent: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-6 w-full max-w-4xl relative z-10">
+      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 w-full max-w-4xl relative z-10 flex-1 min-h-0 overflow-hidden">
         {/* Game Area */}
-        <main className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl w-full lg:w-3/5 relative">
+        <main className="glass-card p-3 sm:p-4 lg:p-6 rounded-2xl sm:rounded-3xl shadow-2xl w-full lg:w-3/5 relative flex flex-col min-h-0 overflow-y-auto lg:overflow-visible">
           {/* Loading overlay */}
           <AnimatePresence>
             {gameState.isLoading && (
@@ -847,7 +847,7 @@ const AppContent: React.FC = () => {
               />
 
               {/* Power-ups bar */}
-              <div className="mt-4">
+              <div className="mt-2 sm:mt-3 lg:mt-4">
                 <PowerUpBar
                   powerUps={gameState.powerUps}
                   onActivate={onPowerUpActivate}
@@ -988,10 +988,10 @@ const AppContent: React.FC = () => {
           )}
 
           {/* Current word display */}
-          <div className="mt-4 text-center">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('game.currentWord')}</p>
+          <div className="mt-2 sm:mt-3 lg:mt-4 text-center">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2">{t('game.currentWord')}</p>
             <motion.div
-              className="text-2xl sm:text-3xl font-bold h-12 flex items-center justify-center bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl shadow-inner px-6 border border-gray-100"
+              className="text-xl sm:text-2xl lg:text-3xl font-bold h-10 sm:h-12 flex items-center justify-center bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl shadow-inner px-4 sm:px-6 border border-gray-100"
               animate={currentWordString.length >= 3 ? { scale: [1, 1.02, 1] } : {}}
               transition={{ duration: 0.3 }}
             >
@@ -1000,7 +1000,7 @@ const AppContent: React.FC = () => {
                   {currentWordString}
                 </span>
               ) : (
-                <span className="text-gray-300 text-lg font-normal">{t('game.selectLetters')}</span>
+                <span className="text-gray-300 text-sm sm:text-lg font-normal">{t('game.selectLetters')}</span>
               )}
             </motion.div>
           </div>
@@ -1021,18 +1021,18 @@ const AppContent: React.FC = () => {
 
           {/* Action buttons - placed right after current word for mobile visibility */}
           {!gameState.isGameOver && (
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mt-2 sm:mt-3 lg:mt-4 grid grid-cols-2 gap-2 sm:gap-3">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onClearWordHandler}
                 disabled={currentWordString.length === 0 || gameState.isLoading || gameState.isWordListLoading}
-                className="flex items-center justify-center gap-2 py-3 px-4
+                className="flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4
                   bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100
-                  text-gray-700 font-semibold rounded-xl shadow-sm border border-gray-200
-                  transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  text-gray-700 font-semibold rounded-lg sm:rounded-xl shadow-sm border border-gray-200
+                  transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
-                <Trash2 size={18} />
+                <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                 {t('game.clear')}
               </motion.button>
               <motion.button
@@ -1040,35 +1040,36 @@ const AppContent: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
                 onClick={onSubmitWordHandler}
                 disabled={currentWordString.length < 3 || gameState.isLoading || gameState.isWordListLoading}
-                className="flex items-center justify-center gap-2 py-3 px-4
+                className="flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4
                   bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700
-                  text-white font-semibold rounded-xl shadow-lg hover:shadow-xl
-                  transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500 btn-premium"
+                  text-white font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl
+                  transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500 btn-premium text-sm sm:text-base"
               >
-                <Send size={18} />
+                <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
                 {t('game.submit')}
               </motion.button>
             </div>
           )}
 
           {/* Score and stats */}
-          <div className="mt-4 flex justify-between items-center px-2 py-2 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-xl">
-            <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-indigo-400" />
-              <span className="text-gray-600 font-medium text-sm">{t('game.score')}:</span>
+          <div className="mt-2 sm:mt-3 lg:mt-4 flex justify-between items-center px-2 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 rounded-lg sm:rounded-xl">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Sparkles size={14} className="sm:w-4 sm:h-4 text-indigo-400" />
+              <span className="text-gray-600 font-medium text-xs sm:text-sm">{t('game.score')}:</span>
               <motion.span
                 key={gameState.score}
                 initial={{ scale: 1.3, color: "#22c55e" }}
                 animate={{ scale: 1, color: "#4f46e5" }}
-                className="font-bold text-xl"
+                className="font-bold text-lg sm:text-xl"
               >
                 {gameState.score}
               </motion.span>
             </div>
             {personalBest > 0 && (
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                <Trophy size={14} className="text-yellow-500" />
-                <span>{t('game.personalBest')}:</span>
+              <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-gray-500">
+                <Trophy size={12} className="sm:w-3.5 sm:h-3.5 text-yellow-500" />
+                <span className="hidden sm:inline">{t('game.personalBest')}:</span>
+                <span className="sm:hidden">PB:</span>
                 <span className="font-semibold text-indigo-500">{personalBest}</span>
               </div>
             )}
@@ -1076,16 +1077,16 @@ const AppContent: React.FC = () => {
 
           {/* Found words - at bottom, scrollable if needed */}
           {gameState.foundWords.length > 0 && (
-            <div className="mt-3 px-2">
+            <div className="mt-2 sm:mt-3 px-2">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{t('game.wordsFound')} ({gameState.foundWords.length})</p>
-              <div className="text-xs text-gray-600 flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-                {gameState.foundWords.slice(-8).map((word, i) => (
-                  <span key={i} className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full border border-green-100">
+              <div className="text-xs text-gray-600 flex flex-wrap gap-1 max-h-12 sm:max-h-16 overflow-y-auto">
+                {gameState.foundWords.slice(-6).map((word, i) => (
+                  <span key={i} className="px-1.5 sm:px-2 py-0.5 bg-green-50 text-green-700 rounded-full border border-green-100">
                     {word}
                   </span>
                 ))}
-                {gameState.foundWords.length > 8 && (
-                  <span className="px-2 py-0.5 text-gray-400">+{gameState.foundWords.length - 8}</span>
+                {gameState.foundWords.length > 6 && (
+                  <span className="px-1.5 sm:px-2 py-0.5 text-gray-400">+{gameState.foundWords.length - 6}</span>
                 )}
               </div>
             </div>
@@ -1093,11 +1094,11 @@ const AppContent: React.FC = () => {
         </main>
 
         {/* Leaderboards */}
-        <aside className="flex flex-col gap-4 w-full lg:w-2/5">
-          <div className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl">
+        <aside className="hidden lg:flex flex-col gap-3 w-full lg:w-2/5 min-h-0 overflow-y-auto">
+          <div className="glass-card p-3 sm:p-4 rounded-2xl shadow-2xl">
             <Leaderboard key={`${leaderboardRefreshKey}-${language}`} currentUserId={anonUserId} language={language} />
           </div>
-          <div className="glass-card p-4 sm:p-6 rounded-3xl shadow-2xl">
+          <div className="glass-card p-3 sm:p-4 rounded-2xl shadow-2xl">
             <RecordsLeaderboard
               key={`records-${leaderboardRefreshKey}-${language}`}
               currentUserId={anonUserId}
@@ -1109,7 +1110,7 @@ const AppContent: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="mt-8 text-center relative z-10">
+      <footer className="mt-2 sm:mt-4 lg:mt-6 text-center relative z-10 flex-shrink-0">
         <p className="text-white/60 text-xs font-medium">
           {t('app.footer')}
         </p>
