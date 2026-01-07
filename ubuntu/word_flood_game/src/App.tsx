@@ -1094,7 +1094,7 @@ const AppContent: React.FC = () => {
         </main>
 
         {/* Leaderboards */}
-        <aside className="hidden lg:flex flex-col gap-3 w-full lg:w-2/5 min-h-0 overflow-y-auto">
+        <aside className="flex flex-col gap-3 w-full lg:w-2/5 min-h-0 overflow-y-auto">
           <div className="glass-card p-3 sm:p-4 rounded-2xl shadow-2xl">
             <Leaderboard key={`${leaderboardRefreshKey}-${language}`} currentUserId={anonUserId} language={language} />
           </div>
