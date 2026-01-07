@@ -728,7 +728,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col items-center h-screen animated-gradient-bg p-2 sm:p-4 font-sans antialiased relative overflow-hidden">
+    <div className="flex flex-col items-center min-h-screen lg:h-screen animated-gradient-bg p-2 sm:p-4 font-sans antialiased relative lg:overflow-hidden">
       {/* Static background decorations - hidden on mobile for performance */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
         <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
@@ -773,9 +773,9 @@ const AppContent: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 w-full max-w-4xl relative z-10 flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 w-full max-w-4xl relative z-10 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
         {/* Game Area */}
-        <main className="glass-card p-3 sm:p-4 lg:p-6 rounded-2xl sm:rounded-3xl shadow-2xl w-full lg:w-3/5 relative flex flex-col min-h-0 overflow-y-auto lg:overflow-visible">
+        <main className="glass-card p-3 sm:p-4 lg:p-6 rounded-2xl sm:rounded-3xl shadow-2xl w-full lg:w-3/5 relative flex flex-col lg:min-h-0 lg:overflow-visible">
           {/* Loading overlay */}
           <AnimatePresence>
             {gameState.isLoading && (
@@ -1094,7 +1094,7 @@ const AppContent: React.FC = () => {
         </main>
 
         {/* Leaderboards */}
-        <aside className="flex flex-col gap-3 w-full lg:w-2/5 min-h-0 overflow-y-auto">
+        <aside className="flex flex-col gap-3 w-full lg:w-2/5 lg:min-h-0 lg:overflow-y-auto">
           <div className="glass-card p-3 sm:p-4 rounded-2xl shadow-2xl">
             <Leaderboard key={`${leaderboardRefreshKey}-${language}`} currentUserId={anonUserId} language={language} />
           </div>
